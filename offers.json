@@ -1,20 +1,12 @@
 [
-  {
-    "productId": "arches_cold_300",
-    "storeId": "kreatima",
-    "width": 300,
-    "height": 400,
-    "sheets": 20,
-    "price": 899,
-    "efficiency": 0.95
-  },
-  {
-    "productId": "arches_cold_300",
-    "storeId": "ib",
-    "width": 300,
-    "height": 400,
-    "sheets": 20,
-    "price": 945,
-    "efficiency": 0.95
-  }
+  { "productId": "arches_300_cold", "storeId": "ib", "width": 300, "height": 400, "sheets": 20, "price": 950, "efficiency": 0.95 },
+  { "productId": "arches_300_cold", "storeId": "kreatima", "width": 300, "height": 400, "sheets": 20, "price": 899, "efficiency": 0.95 },
+
+  { "productId": "fabriano_artistico", "storeId": "kck", "width": 300, "height": 400, "sheets": 10, "price": 420, "efficiency": 0.95 },
+
+  { "productId": "canson_xl", "storeId": "cass_art_uk", "width": 210, "height": 297, "sheets": 30, "price": 18, "efficiency": 0.9 },
+
+  { "productId": "strathmore_400", "storeId": "blick_us", "width": 300, "height": 400, "sheets": 12, "price": 24, "efficiency": 0.9 },
+
+  { "productId": "baohong_academy", "storeId": "eu_online", "width": 300, "height": 400, "sheets": 20, "price": 32, "efficiency": 0.95 }
 ]
