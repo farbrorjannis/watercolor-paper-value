@@ -1,17 +1,41 @@
 [
-{"id":"arches_block_cp","brand":"Arches","name":"Cold Press Block 300gsm","material":"cotton","surface":"cold","formatType":"block"},
-{"id":"arches_block_hp","brand":"Arches","name":"Hot Press Block","material":"cotton","surface":"hot","formatType":"block"},
-{"id":"arches_sheet_640","brand":"Arches","name":"Full Sheet 640gsm","material":"cotton","surface":"cold","formatType":"sheet"},
-{"id":"arches_roll","brand":"Arches","name":"10m Roll","material":"cotton","surface":"cold","formatType":"roll"},
-{"id":"fabriano_artistico_block","brand":"Fabriano","name":"Artistico Block","material":"cotton","surface":"cold","formatType":"block"},
-{"id":"fabriano_1264_spiral","brand":"Fabriano","name":"1264 Spiral","material":"cellulose","surface":"cold","formatType":"spiral"},
-{"id":"hahnemuhle_expression","brand":"Hahnemuhle","name":"Expression","material":"cotton","surface":"cold","formatType":"block"},
-{"id":"hahnemuhle_roll","brand":"Hahnemuhle","name":"10m Roll","material":"cotton","surface":"rough","formatType":"roll"},
-{"id":"saunders_block","brand":"Saunders","name":"Waterford Block","material":"cotton","surface":"cold","formatType":"block"},
-{"id":"baohong_roll","brand":"Baohong","name":"Academy Roll","material":"cotton","surface":"cold","formatType":"roll"},
-{"id":"canson_xl_spiral","brand":"Canson","name":"XL Spiral","material":"cellulose","surface":"cold","formatType":"spiral"},
-{"id":"canson_montval","brand":"Canson","name":"Montval Block","material":"cellulose","surface":"cold","formatType":"block"},
-{"id":"strathmore400","brand":"Strathmore","name":"400 Series","material":"cellulose","surface":"cold","formatType":"pad"},
-{"id":"winsor_cotman","brand":"Winsor & Newton","name":"Cotman Pad","material":"cellulose","surface":"cold","formatType":"pad"},
-{"id":"bockingford","brand":"Bockingford","name":"Block","material":"cellulose","surface":"rough","formatType":"block"}
+{"id":"arches_cp","brand":"Arches","name":"Cold Press 300gsm","material":"cotton","surface":"cold"},
+{"id":"arches_hp","brand":"Arches","name":"Hot Press 300gsm","material":"cotton","surface":"hot"},
+{"id":"arches_rough","brand":"Arches","name":"Rough 300gsm","material":"cotton","surface":"rough"},
+{"id":"arches_640","brand":"Arches","name":"Extra Heavy 640gsm","material":"cotton","surface":"cold"},
+{"id":"arches_roll","brand":"Arches","name":"Roll 10m","material":"cotton","surface":"cold"},
+
+{"id":"fabriano_artistico","brand":"Fabriano","name":"Artistico Block","material":"cotton","surface":"cold"},
+{"id":"fabriano_hp","brand":"Fabriano","name":"Hot Press Block","material":"cotton","surface":"hot"},
+{"id":"fabriano_spiral","brand":"Fabriano","name":"1264 Spiral","material":"cellulose","surface":"cold"},
+
+{"id":"hahnemuhle_expression","brand":"Hahnemühle","name":"Expression","material":"cotton","surface":"cold"},
+{"id":"hahnemuhle_german","brand":"Hahnemühle","name":"German Etching","material":"cotton","surface":"rough"},
+{"id":"hahnemuhle_roll","brand":"Hahnemühle","name":"Roll 10m","material":"cotton","surface":"cold"},
+
+{"id":"saunders_cp","brand":"Saunders","name":"Waterford CP Block","material":"cotton","surface":"cold"},
+{"id":"saunders_rough","brand":"Saunders","name":"Rough Block","material":"cotton","surface":"rough"},
+
+{"id":"canson_xl","brand":"Canson","name":"XL Watercolor","material":"cellulose","surface":"cold"},
+{"id":"canson_montval","brand":"Canson","name":"Montval Block","material":"cellulose","surface":"cold"},
+{"id":"canson_spiral","brand":"Canson","name":"Spiral Pad","material":"cellulose","surface":"cold"},
+
+{"id":"strathmore_400","brand":"Strathmore","name":"400 Series","material":"cellulose","surface":"cold"},
+{"id":"winsor_cotman","brand":"Winsor & Newton","name":"Cotman Pad","material":"cellulose","surface":"cold"},
+
+{"id":"baohong_academy","brand":"Baohong","name":"Academy Block","material":"cotton","surface":"cold"},
+{"id":"baohong_artist","brand":"Baohong","name":"Artist Block","material":"cotton","surface":"cold"},
+{"id":"baohong_roll","brand":"Baohong","name":"Roll 10m","material":"cotton","surface":"cold"},
+
+{"id":"bockingford","brand":"Bockingford","name":"Watercolor Block","material":"cellulose","surface":"rough"},
+{"id":"clairefontaine","brand":"Clairefontaine","name":"Aquapad","material":"cellulose","surface":"cold"},
+{"id":"paints_press","brand":"ProArt","name":"Student Pad","material":"cellulose","surface":"cold"},
+
+{"id":"arches_sketch","brand":"Arches","name":"Sketch Pad","material":"cotton","surface":"cold"},
+{"id":"fabriano_sketch","brand":"Fabriano","name":"Sketch Pad","material":"cellulose","surface":"cold"},
+
+{"id":"hahnemuhle_travel","brand":"Hahnemühle","name":"Travel Book","material":"cotton","surface":"cold"},
+{"id":"saunders_block_small","brand":"Saunders","name":"Small Block","material":"cotton","surface":"cold"},
+
+{"id":"canson_studio","brand":"Canson","name":"Studio Pad","material":"cellulose","surface":"cold"}
 ]
