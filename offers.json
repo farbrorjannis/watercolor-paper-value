@@ -1,9 +1,20 @@
-{
-  "productId": "arches_cold_300",
-  "storeId": "kreatima",
-  "width": 300,
-  "height": 400,
-  "sheets": 20,
-  "price": 899,
-  "efficiency": 0.95
-}
+[
+  {
+    "productId": "arches_cold_300",
+    "storeId": "kreatima",
+    "width": 300,
+    "height": 400,
+    "sheets": 20,
+    "price": 899,
+    "efficiency": 0.95
+  },
+  {
+    "productId": "arches_cold_300",
+    "storeId": "ib",
+    "width": 300,
+    "height": 400,
+    "sheets": 20,
+    "price": 945,
+    "efficiency": 0.95
+  }
+]
