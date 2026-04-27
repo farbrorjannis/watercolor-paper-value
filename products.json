@@ -1,16 +1,20 @@
 [
-  {
-    "id": "arches_cold_300",
-    "brand": "Arches",
-    "name": "Cold Press 300gsm",
-    "material": "cotton",
-    "surface": "cold"
-  },
-  {
-    "id": "canson_xl_300",
-    "brand": "Canson",
-    "name": "XL Watercolor Paper 300gsm",
-    "material": "cellulose",
-    "surface": "cold"
-  }
+  { "id": "arches_300_cold", "brand": "Arches", "name": "Cold Press 300gsm", "material": "cotton", "surface": "cold" },
+  { "id": "arches_300_hot", "brand": "Arches", "name": "Hot Press 300gsm", "material": "cotton", "surface": "hot" },
+
+  { "id": "fabriano_artistico", "brand": "Fabriano", "name": "Artistico 300gsm", "material": "cotton", "surface": "cold" },
+
+  { "id": "hahnemuhle_german", "brand": "Hahnemühle", "name": "German Etching", "material": "cotton", "surface": "rough" },
+
+  { "id": "canson_xl", "brand": "Canson", "name": "XL Watercolor", "material": "cellulose", "surface": "cold" },
+
+  { "id": "strathmore_400", "brand": "Strathmore", "name": "400 Series", "material": "cellulose", "surface": "cold" },
+
+  { "id": "winsor_cotman", "brand": "Winsor & Newton", "name": "Cotman", "material": "cellulose", "surface": "cold" },
+
+  { "id": "fabriano_studio", "brand": "Fabriano", "name": "Studio Watercolor", "material": "cellulose", "surface": "cold" },
+
+  { "id": "arches_notebook", "brand": "Arches", "name": "Notebook Pad", "material": "cotton", "surface": "cold" },
+
+  { "id": "baohong_academy", "brand": "Baohong", "name": "Academy Watercolor", "material": "cotton", "surface": "cold" }
 ]
