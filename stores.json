@@ -1,3 +1,31 @@
 [
-  { "id":"ib", "name":"IB Wahlström", "city":"Stockholm", "country":"SE", "currency":"SEK" }
+  {
+    "id": "ib",
+    "name": "IB Wahlström",
+    "city": "Stockholm",
+    "country": "SE",
+    "currency": "SEK"
+  },
+  {
+    "id": "kreatima",
+    "name": "Kreatima",
+    "city": "Stockholm",
+    "country": "SE",
+    "currency": "SEK"
+  },
+  {
+    "id": "kck",
+    "name": "KCK",
+    "city": "Stockholm",
+    "country": "SE",
+    "currency": "SEK"
+  },
+  {
+    "id": "jordi",
+    "name": "Jordi",
+    "city": "Stockholm",
+    "country": "SE",
+    "currency": "SEK"
+  }
+]
 ]
