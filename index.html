@@ -28,9 +28,7 @@ h1{font-size:18px;margin:0}
   box-shadow:0 2px 8px rgba(0,0,0,0.06);
 }
 label{font-size:12px;opacity:.7;display:block;margin-top:8px}
-input,select{width:100%;padding:8px;margin-top:4px;border:1px solid #ddd;border-radius:8px}
-button{margin-top:10px;padding:8px 12px;background:#1f1f1f;color:#fff;border:none;border-radius:8px;cursor:pointer}
-button:hover{opacity:0.9}
+select{width:100%;padding:8px;margin-top:4px;border:1px solid #ddd;border-radius:8px}
 .badge{font-size:11px;padding:3px 8px;border-radius:20px;margin-left:8px}
 .best{background:#d7f5dd}
 .ok{background:#fff6d6}
@@ -72,25 +70,13 @@ button:hover{opacity:0.9}
 </div>
 
 <div class="card">
-  <strong>Add your store</strong>
-  <input id="name" placeholder="Store name"/>
-  <input id="city" placeholder="City"/>
-  <input id="country" placeholder="Country"/>
-  <input id="currency" placeholder="Currency"/>
-  <button onclick="addStore()">Add store</button>
+  <div class="section-title">Best deals per paper</div>
+  <div id="bestDeals"></div>
 </div>
 
 <div class="card">
-  <strong>Stores</strong>
-  <div id="stores"></div>
-</div>
-
-<div class="card">
-  <div class="section-title">Best value choices</div>
-  <div id="best"></div>
-
-  <div class="section-title">Top 3 cheapest per A4</div>
-  <div id="top3"></div>
+  <div class="section-title">Top 3 cheapest offers (filtered)</div>
+  <div id="topOffers"></div>
 </div>
 
 <h2 style="font-size:16px;">All offers</h2>
@@ -99,126 +85,143 @@ button:hover{opacity:0.9}
 </div>
 
 <script>
+
 const A4 = 210 * 297;
 
-// ---------------- DATA (LOADED EXTERNALLY) ----------------
+// ---------------- DATA ----------------
 let stores = [];
 let offers = [];
+let products = [];
 
-// 🔗 CHANGE THIS TO YOUR GITHUB RAW FILES
 const STORES_URL = "stores.json";
 const OFFERS_URL = "offers.json";
+const PRODUCTS_URL = "products.json";
 
+// ---------------- LOAD DATA ----------------
 async function loadData(){
-  try {
-    const s = await fetch(STORES_URL);
-    const o = await fetch(OFFERS_URL);
+  try{
+    const [s,o,p] = await Promise.all([
+      fetch(STORES_URL),
+      fetch(OFFERS_URL),
+      fetch(PRODUCTS_URL)
+    ]);
 
     stores = await s.json();
     offers = await o.json();
+    products = await p.json();
 
     renderStores();
-    renderOffers();
-
+    renderAll();
   } catch(err){
-    console.error("Data load failed", err);
+    console.error("Load error", err);
   }
 }
 
+// ---------------- CALC ----------------
 function calc(o){
-  let area=o.w*o.h;
-  let total=area*o.sheets*o.eff;
-  let a4=total/A4;
-  return {...o,a4,pricePerA4:o.price/a4};
+  const area = o.width * o.height;
+  const total = area * o.sheets * o.efficiency;
+  const a4 = total / A4;
+  return {...o, a4, pricePerA4: o.price / a4};
 }
 
-function score(v){
-  if(v<15) return "best";
-  if(v<30) return "ok";
-  return "expensive";
-}
-
-function getFiltered(){
-  let sf=document.getElementById("surface").value;
-  let mf=document.getElementById("material").value;
-  let st=document.getElementById("storeFilter").value;
-
-  return offers
-    .map(calc)
-    .filter(o=>sf=="all"||o.surface==sf)
-    .filter(o=>mf=="all"||o.material==mf)
-    .filter(o=>st=="all"||o.storeId==st);
-}
-
-function renderSmart(){
-  let data=getFiltered();
-
-  let best=data.sort((a,b)=>a.pricePerA4-b.pricePerA4)[0];
-
-  document.getElementById("best").innerHTML = best ? 
-    `<div><strong>${best.name}</strong> – ${best.pricePerA4.toFixed(2)} per A4</div>`
-    : "No recommendation";
-
-  let top3=data.sort((a,b)=>a.pricePerA4-b.pricePerA4).slice(0,3);
-
-  document.getElementById("top3").innerHTML = top3
-    .map(o=>`<div>${o.name} – ${o.pricePerA4.toFixed(2)}</div>`)
-    .join("");
-}
-
-function renderStores(){
-  let sel=document.getElementById("storeFilter");
-  sel.innerHTML='<option value="all">All stores</option>';
-
-  document.getElementById("stores").innerHTML = stores
-    .map(s=>`<div>${s.name} (${s.city})</div>`)
-    .join("");
-
-  stores.forEach(s=>{
-    sel.innerHTML+=`<option value="${s.id}">${s.name}</option>`;
+// ---------------- JOIN DATA ----------------
+function buildFullDataset(){
+  return offers.map(o => {
+    const product = products.find(p => p.id === o.productId);
+    const store = stores.find(s => s.id === o.storeId);
+    const enriched = calc(o);
+    return {...enriched, product, store};
   });
 }
 
-function renderOffers(){
-  let el=document.getElementById("offers");
-  let data=getFiltered();
+// ---------------- FILTERS ----------------
+function getFiltered(data){
+  const sf = document.getElementById("surface").value;
+  const mf = document.getElementById("material").value;
+  const st = document.getElementById("storeFilter").value;
 
-  el.innerHTML=data.map(o=>{
-    let s=stores.find(x=>x.id===o.storeId);
-    let sc=score(o.pricePerA4);
+  return data
+    .filter(d => sf === "all" || d.product?.surface === sf)
+    .filter(d => mf === "all" || d.product?.material === mf)
+    .filter(d => st === "all" || d.storeId === st);
+}
 
-    return `
+// ---------------- GROUP BEST DEAL PER PRODUCT ----------------
+function renderBestDeals(data){
+  const groups = {};
+
+  data.forEach(d => {
+    if(!groups[d.productId] || d.pricePerA4 < groups[d.productId].pricePerA4){
+      groups[d.productId] = d;
+    }
+  });
+
+  const el = document.getElementById("bestDeals");
+  el.innerHTML = Object.values(groups)
+    .map(d => `
       <div class="card">
-        <strong>${o.name}</strong>
-        <span class="badge ${sc}">${sc.toUpperCase()}</span>
-        <div class="small">${s?.name || "Unknown"} • ${o.material} • ${o.surface}</div>
-        <div>Price: ${o.price} ${s?.currency || ""}</div>
-        <div>A4 units: ${o.a4.toFixed(2)}</div>
-        <div><strong>Price per A4: ${o.pricePerA4.toFixed(2)}</strong></div>
+        <strong>${d.product?.brand || ""} ${d.product?.name || "Unknown"}</strong>
+        <div class="small">Best price at ${d.store?.name}</div>
+        <div><strong>${d.pricePerA4.toFixed(2)} per A4</strong></div>
       </div>
-    `;
-  }).join("");
-
-  renderSmart();
+    `).join("");
 }
 
-function addStore(){
-  stores.push({
-    id:document.getElementById("name").value.toLowerCase().replace(/\s/g,"_"),
-    name:document.getElementById("name").value,
-    city:document.getElementById("city").value,
-    country:document.getElementById("country").value,
-    currency:document.getElementById("currency").value
+// ---------------- TOP OFFERS ----------------
+function renderTopOffers(data){
+  const top = [...data]
+    .sort((a,b)=>a.pricePerA4-b.pricePerA4)
+    .slice(0,3);
+
+  document.getElementById("topOffers").innerHTML = top
+    .map(d => `
+      <div>${d.product?.name || ""} – ${d.store?.name} – ${d.pricePerA4.toFixed(2)}</div>
+    `).join("");
+}
+
+// ---------------- OFFERS LIST ----------------
+function renderOffers(data){
+  document.getElementById("offers").innerHTML = data.map(d => `
+    <div class="card">
+      <strong>${d.product?.brand || ""} ${d.product?.name || ""}</strong>
+      <div class="small">${d.store?.name}</div>
+      <div>Price: ${d.price} ${d.store?.currency || ""}</div>
+      <div>A4 units: ${d.a4.toFixed(2)}</div>
+      <div><strong>${d.pricePerA4.toFixed(2)} per A4</strong></div>
+    </div>
+  `).join("");
+}
+
+// ---------------- STORES ----------------
+function renderStores(){
+  const sel = document.getElementById("storeFilter");
+  sel.innerHTML = `<option value="all">All stores</option>`;
+
+  stores.forEach(s => {
+    sel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
   });
-  renderStores();
-  renderOffers();
 }
 
-document.querySelectorAll("select").forEach(s=>
-  s.addEventListener("change",renderOffers)
+// ---------------- MASTER RENDER ----------------
+function renderAll(){
+  const full = buildFullDataset();
+  const filtered = getFiltered(full);
+
+  renderOffers(filtered);
+  renderBestDeals(filtered);
+  renderTopOffers(filtered);
+}
+
+// ---------------- EVENTS ----------------
+
+document.querySelectorAll("select").forEach(s =>
+  s.addEventListener("change", renderAll)
 );
 
+// ---------------- INIT ----------------
 loadData();
+
 </script>
 
 </body>
