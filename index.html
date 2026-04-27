@@ -1,226 +1,93 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Akvarellskiss Paper Value Tool</title>
+<meta charset="utf-8"/>
+<title>Watercolor Value Tool</title>
 
 <style>
-body{
-  margin:0;
-  font-family: Arial, sans-serif;
-  background:#f6f3ef;
-  color:#1f1f1f;
-}
-header{
-  padding:18px;
-  background:#fff;
-  border-bottom:1px solid #e7e2dc;
-}
-h1{font-size:18px;margin:0}
-.sub{font-size:12px;opacity:.7;margin-top:4px}
+body{font-family:Arial;margin:0;background:#f6f3ef}
+header{padding:16px;background:white}
 .container{max-width:900px;margin:auto;padding:16px}
-.card{
-  background:#fff;
-  border-radius:12px;
-  padding:12px;
-  margin-bottom:10px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.06);
-}
-label{font-size:12px;opacity:.7;display:block;margin-top:8px}
-select{width:100%;padding:8px;margin-top:4px;border:1px solid #ddd;border-radius:8px}
-.badge{font-size:11px;padding:3px 8px;border-radius:20px;margin-left:8px}
-.best{background:#d7f5dd}
-.ok{background:#fff6d6}
-.expensive{background:#ffe0e0}
-.small{font-size:12px;opacity:.7}
-.section-title{margin-top:18px;font-size:14px;font-weight:bold}
+.card{background:white;padding:12px;margin:10px 0;border-radius:10px}
+select{width:100%;padding:8px;margin:5px 0}
 </style>
 </head>
 
 <body>
 
 <header>
-  <h1>Akvarellskiss Paper Value Tool</h1>
-  <div class="sub">Compare watercolor paper by real cost per usable A4 surface</div>
+<h2>Watercolor Paper Value Tool</h2>
 </header>
 
 <div class="container">
 
 <div class="card">
-  <strong>Filters</strong>
-
-  <label>Surface</label>
-  <select id="surface">
-    <option value="all">All</option>
-    <option value="cold">Cold Press</option>
-    <option value="hot">Hot Press</option>
-    <option value="rough">Rough</option>
-  </select>
-
-  <label>Material</label>
-  <select id="material">
-    <option value="all">All</option>
-    <option value="cotton">100% Cotton</option>
-    <option value="cellulose">Cellulose</option>
-  </select>
-
-  <label>Store</label>
-  <select id="storeFilter"></select>
+<select id="store"></select>
+<select id="material">
+<option value="all">All material</option>
+<option value="cotton">Cotton</option>
+<option value="cellulose">Cellulose</option>
+</select>
 </div>
 
-<div class="card">
-  <div class="section-title">Best deals per paper</div>
-  <div id="bestDeals"></div>
-</div>
-
-<div class="card">
-  <div class="section-title">Top 3 cheapest offers (filtered)</div>
-  <div id="topOffers"></div>
-</div>
-
-<h2 style="font-size:16px;">All offers</h2>
-<div id="offers"></div>
+<div id="out"></div>
 
 </div>
 
 <script>
 
-const A4 = 210 * 297;
+const A4 = 210*297;
 
-// ---------------- DATA ----------------
-let stores = [];
-let offers = [];
-let products = [];
+let stores=[],products=[],offers=[];
 
-const STORES_URL = "stores.json";
-const OFFERS_URL = "offers.json";
-const PRODUCTS_URL = "products.json";
+Promise.all([
+fetch("stores.json").then(r=>r.json()),
+fetch("products.json").then(r=>r.json()),
+fetch("offers.json").then(r=>r.json())
+]).then(d=>{
+stores=d[0];products=d[1];offers=d[2];
+init();
+render();
+});
 
-// ---------------- LOAD DATA ----------------
-async function loadData(){
-  try{
-    const [s,o,p] = await Promise.all([
-      fetch(STORES_URL),
-      fetch(OFFERS_URL),
-      fetch(PRODUCTS_URL)
-    ]);
-
-    stores = await s.json();
-    offers = await o.json();
-    products = await p.json();
-
-    renderStores();
-    renderAll();
-  } catch(err){
-    console.error("Load error", err);
-  }
+function init(){
+const s=document.getElementById("store");
+s.innerHTML='<option value="all">All stores</option>';
+stores.forEach(x=>{
+s.innerHTML+=`<option value="${x.id}">${x.name}</option>`;
+});
+s.onchange=render;
+document.getElementById("material").onchange=render;
 }
 
-// ---------------- CALC ----------------
 function calc(o){
-  const area = o.width * o.height;
-  const total = area * o.sheets * o.efficiency;
-  const a4 = total / A4;
-  return {...o, a4, pricePerA4: o.price / a4};
+const area=o.width*o.height;
+const total=area*o.sheets*o.efficiency;
+const a4=total/A4;
+return {...o,a4,pp:a4?o.price/a4:999999};
 }
 
-// ---------------- JOIN DATA ----------------
-function buildFullDataset(){
-  return offers.map(o => {
-    const product = products.find(p => p.id === o.productId);
-    const store = stores.find(s => s.id === o.storeId);
-    const enriched = calc(o);
-    return {...enriched, product, store};
-  });
+function render(){
+let m=document.getElementById("material").value;
+let st=document.getElementById("store").value;
+
+let data=offers.map(o=>{
+let p=products.find(x=>x.id===o.productId);
+let s=stores.find(x=>x.id===o.storeId);
+return {...calc(o),product:p,store:s};
+})
+.filter(d=>m==="all"||d.product.material===m)
+.filter(d=>st==="all"||d.storeId===st);
+
+document.getElementById("out").innerHTML=
+data.map(d=>`
+<div class="card">
+<b>${d.product.brand} ${d.product.name}</b><br/>
+${d.store.name}<br/>
+${d.pp.toFixed(2)} per A4
+</div>
+`).join("");
 }
-
-// ---------------- FILTERS ----------------
-function getFiltered(data){
-  const sf = document.getElementById("surface").value;
-  const mf = document.getElementById("material").value;
-  const st = document.getElementById("storeFilter").value;
-
-  return data
-    .filter(d => sf === "all" || d.product?.surface === sf)
-    .filter(d => mf === "all" || d.product?.material === mf)
-    .filter(d => st === "all" || d.storeId === st);
-}
-
-// ---------------- GROUP BEST DEAL PER PRODUCT ----------------
-function renderBestDeals(data){
-  const groups = {};
-
-  data.forEach(d => {
-    if(!groups[d.productId] || d.pricePerA4 < groups[d.productId].pricePerA4){
-      groups[d.productId] = d;
-    }
-  });
-
-  const el = document.getElementById("bestDeals");
-  el.innerHTML = Object.values(groups)
-    .map(d => `
-      <div class="card">
-        <strong>${d.product?.brand || ""} ${d.product?.name || "Unknown"}</strong>
-        <div class="small">Best price at ${d.store?.name}</div>
-        <div><strong>${d.pricePerA4.toFixed(2)} per A4</strong></div>
-      </div>
-    `).join("");
-}
-
-// ---------------- TOP OFFERS ----------------
-function renderTopOffers(data){
-  const top = [...data]
-    .sort((a,b)=>a.pricePerA4-b.pricePerA4)
-    .slice(0,3);
-
-  document.getElementById("topOffers").innerHTML = top
-    .map(d => `
-      <div>${d.product?.name || ""} – ${d.store?.name} – ${d.pricePerA4.toFixed(2)}</div>
-    `).join("");
-}
-
-// ---------------- OFFERS LIST ----------------
-function renderOffers(data){
-  document.getElementById("offers").innerHTML = data.map(d => `
-    <div class="card">
-      <strong>${d.product?.brand || ""} ${d.product?.name || ""}</strong>
-      <div class="small">${d.store?.name}</div>
-      <div>Price: ${d.price} ${d.store?.currency || ""}</div>
-      <div>A4 units: ${d.a4.toFixed(2)}</div>
-      <div><strong>${d.pricePerA4.toFixed(2)} per A4</strong></div>
-    </div>
-  `).join("");
-}
-
-// ---------------- STORES ----------------
-function renderStores(){
-  const sel = document.getElementById("storeFilter");
-  sel.innerHTML = `<option value="all">All stores</option>`;
-
-  stores.forEach(s => {
-    sel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
-  });
-}
-
-// ---------------- MASTER RENDER ----------------
-function renderAll(){
-  const full = buildFullDataset();
-  const filtered = getFiltered(full);
-
-  renderOffers(filtered);
-  renderBestDeals(filtered);
-  renderTopOffers(filtered);
-}
-
-// ---------------- EVENTS ----------------
-
-document.querySelectorAll("select").forEach(s =>
-  s.addEventListener("change", renderAll)
-);
-
-// ---------------- INIT ----------------
-loadData();
 
 </script>
 
