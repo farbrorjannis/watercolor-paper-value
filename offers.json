@@ -1,12 +1,8 @@
 [
-  { "productId": "arches_300_cold", "storeId": "ib", "width": 300, "height": 400, "sheets": 20, "price": 950, "efficiency": 0.95 },
-  { "productId": "arches_300_cold", "storeId": "kreatima", "width": 300, "height": 400, "sheets": 20, "price": 899, "efficiency": 0.95 },
-
-  { "productId": "fabriano_artistico", "storeId": "kck", "width": 300, "height": 400, "sheets": 10, "price": 420, "efficiency": 0.95 },
-
-  { "productId": "canson_xl", "storeId": "cass_art_uk", "width": 210, "height": 297, "sheets": 30, "price": 18, "efficiency": 0.9 },
-
-  { "productId": "strathmore_400", "storeId": "blick_us", "width": 300, "height": 400, "sheets": 12, "price": 24, "efficiency": 0.9 },
-
-  { "productId": "baohong_academy", "storeId": "eu_online", "width": 300, "height": 400, "sheets": 20, "price": 32, "efficiency": 0.95 }
+{"productId":"arches_block_cp","storeId":"kreatima","width":300,"height":400,"sheets":20,"price":899,"efficiency":0.95},
+{"productId":"arches_sheet_640","storeId":"ib","width":560,"height":760,"sheets":1,"price":95,"efficiency":0.95},
+{"productId":"fabriano_artistico_block","storeId":"kck","width":300,"height":400,"sheets":10,"price":420,"efficiency":0.95},
+{"productId":"hahnemuhle_expression","storeId":"jordi","width":300,"height":400,"sheets":12,"price":385,"efficiency":0.95},
+{"productId":"canson_xl_spiral","storeId":"cass_art_uk","width":210,"height":297,"sheets":30,"price":18,"efficiency":0.9},
+{"productId":"baohong_roll","storeId":"blick_us","width":1130,"height":10000,"sheets":1,"price":145,"efficiency":0.95}
 ]
