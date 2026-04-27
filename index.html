@@ -12,30 +12,14 @@ body{
   background:#f6f3ef;
   color:#1f1f1f;
 }
-
 header{
   padding:18px;
   background:#fff;
   border-bottom:1px solid #e7e2dc;
 }
-
-h1{
-  font-size:18px;
-  margin:0;
-}
-
-.sub{
-  font-size:12px;
-  opacity:.7;
-  margin-top:4px;
-}
-
-.container{
-  max-width:900px;
-  margin:auto;
-  padding:16px;
-}
-
+h1{font-size:18px;margin:0}
+.sub{font-size:12px;opacity:.7;margin-top:4px}
+.container{max-width:900px;margin:auto;padding:16px}
 .card{
   background:#fff;
   border-radius:12px;
@@ -43,51 +27,16 @@ h1{
   margin-bottom:10px;
   box-shadow:0 2px 8px rgba(0,0,0,0.06);
 }
-
-label{
-  font-size:12px;
-  opacity:.7;
-  display:block;
-  margin-top:8px;
-}
-
-input, select{
-  width:100%;
-  padding:8px;
-  margin-top:4px;
-  border:1px solid #ddd;
-  border-radius:8px;
-}
-
-button{
-  margin-top:10px;
-  padding:8px 12px;
-  background:#1f1f1f;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-button:hover{
-  opacity:0.9;
-}
-
-.badge{
-  font-size:11px;
-  padding:3px 8px;
-  border-radius:20px;
-  margin-left:8px;
-}
-
-.best{background:#d7f5dd;}
-.ok{background:#fff6d6;}
-.expensive{background:#ffe0e0;}
-
-.small{
-  font-size:12px;
-  opacity:.7;
-}
+label{font-size:12px;opacity:.7;display:block;margin-top:8px}
+input,select{width:100%;padding:8px;margin-top:4px;border:1px solid #ddd;border-radius:8px}
+button{margin-top:10px;padding:8px 12px;background:#1f1f1f;color:#fff;border:none;border-radius:8px;cursor:pointer}
+button:hover{opacity:0.9}
+.badge{font-size:11px;padding:3px 8px;border-radius:20px;margin-left:8px}
+.best{background:#d7f5dd}
+.ok{background:#fff6d6}
+.expensive{background:#ffe0e0}
+.small{font-size:12px;opacity:.7}
+.section-title{margin-top:18px;font-size:14px;font-weight:bold}
 </style>
 </head>
 
@@ -100,7 +49,6 @@ button:hover{
 
 <div class="container">
 
-<!-- FILTERS -->
 <div class="card">
   <strong>Filters</strong>
 
@@ -123,161 +71,154 @@ button:hover{
   <select id="storeFilter"></select>
 </div>
 
-<!-- ADD STORE -->
 <div class="card">
   <strong>Add your store</strong>
-
   <input id="name" placeholder="Store name"/>
   <input id="city" placeholder="City"/>
   <input id="country" placeholder="Country"/>
-  <input id="currency" placeholder="Currency (SEK/EUR/GBP/USD)"/>
-
+  <input id="currency" placeholder="Currency"/>
   <button onclick="addStore()">Add store</button>
 </div>
 
-<!-- STORES -->
 <div class="card">
   <strong>Stores</strong>
   <div id="stores"></div>
 </div>
 
-<h2 style="font-size:16px;">Offers</h2>
+<div class="card">
+  <div class="section-title">Best value choices</div>
+  <div id="best"></div>
+
+  <div class="section-title">Top 3 cheapest per A4</div>
+  <div id="top3"></div>
+</div>
+
+<h2 style="font-size:16px;">All offers</h2>
 <div id="offers"></div>
 
 </div>
 
 <script>
-
 const A4 = 210 * 297;
 
-/* ---------------- STORES ---------------- */
-let stores = [
-  {id:"ib",name:"IB Wahlström",city:"Stockholm",country:"SE",currency:"SEK"},
-  {id:"kreatima",name:"Kreatima",city:"Stockholm",country:"SE",currency:"SEK"},
-  {id:"kck",name:"KCK",city:"Stockholm",country:"SE",currency:"SEK"},
-  {id:"jordi",name:"Jordi",city:"Stockholm",country:"SE",currency:"SEK"}
-];
+// ---------------- DATA (LOADED EXTERNALLY) ----------------
+let stores = [];
+let offers = [];
 
-/* ---------------- OFFERS ---------------- */
-let offers = [
-  {
-    id:"arches",
-    name:"Arches Cold Press Block",
-    storeId:"kreatima",
-    w:300,
-    h:400,
-    sheets:20,
-    price:899,
-    eff:0.95,
-    material:"cotton",
-    surface:"cold"
-  },
-  {
-    id:"canson",
-    name:"Canson XL Watercolor Pad",
-    storeId:"ib",
-    w:210,
-    h:297,
-    sheets:30,
-    price:249,
-    eff:0.95,
-    material:"cellulose",
-    surface:"cold"
+// 🔗 CHANGE THIS TO YOUR GITHUB RAW FILES
+const STORES_URL = "stores.json";
+const OFFERS_URL = "offers.json";
+
+async function loadData(){
+  try {
+    const s = await fetch(STORES_URL);
+    const o = await fetch(OFFERS_URL);
+
+    stores = await s.json();
+    offers = await o.json();
+
+    renderStores();
+    renderOffers();
+
+  } catch(err){
+    console.error("Data load failed", err);
   }
-];
-
-/* ---------------- CALC ---------------- */
-function calc(o){
-  let area = o.w * o.h;
-  let total = area * o.sheets * o.eff;
-  let a4 = total / A4;
-  return {
-    a4,
-    pricePerA4: o.price / a4
-  };
 }
 
-/* ---------------- VALUE SCORE ---------------- */
+function calc(o){
+  let area=o.w*o.h;
+  let total=area*o.sheets*o.eff;
+  let a4=total/A4;
+  return {...o,a4,pricePerA4:o.price/a4};
+}
+
 function score(v){
-  if(v < 15) return "best";
-  if(v < 30) return "ok";
+  if(v<15) return "best";
+  if(v<30) return "ok";
   return "expensive";
 }
 
-/* ---------------- RENDER STORES ---------------- */
-function renderStores(){
-  let el = document.getElementById("stores");
-  let sel = document.getElementById("storeFilter");
+function getFiltered(){
+  let sf=document.getElementById("surface").value;
+  let mf=document.getElementById("material").value;
+  let st=document.getElementById("storeFilter").value;
 
-  sel.innerHTML = `<option value="all">All stores</option>`;
-  el.innerHTML = "";
+  return offers
+    .map(calc)
+    .filter(o=>sf=="all"||o.surface==sf)
+    .filter(o=>mf=="all"||o.material==mf)
+    .filter(o=>st=="all"||o.storeId==st);
+}
+
+function renderSmart(){
+  let data=getFiltered();
+
+  let best=data.sort((a,b)=>a.pricePerA4-b.pricePerA4)[0];
+
+  document.getElementById("best").innerHTML = best ? 
+    `<div><strong>${best.name}</strong> – ${best.pricePerA4.toFixed(2)} per A4</div>`
+    : "No recommendation";
+
+  let top3=data.sort((a,b)=>a.pricePerA4-b.pricePerA4).slice(0,3);
+
+  document.getElementById("top3").innerHTML = top3
+    .map(o=>`<div>${o.name} – ${o.pricePerA4.toFixed(2)}</div>`)
+    .join("");
+}
+
+function renderStores(){
+  let sel=document.getElementById("storeFilter");
+  sel.innerHTML='<option value="all">All stores</option>';
+
+  document.getElementById("stores").innerHTML = stores
+    .map(s=>`<div>${s.name} (${s.city})</div>`)
+    .join("");
 
   stores.forEach(s=>{
-    sel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
-    el.innerHTML += `<div>${s.name} (${s.city})</div>`;
+    sel.innerHTML+=`<option value="${s.id}">${s.name}</option>`;
   });
 }
 
-/* ---------------- RENDER OFFERS ---------------- */
 function renderOffers(){
+  let el=document.getElementById("offers");
+  let data=getFiltered();
 
-  let surface = document.getElementById("surface").value;
-  let material = document.getElementById("material").value;
-  let store = document.getElementById("storeFilter").value;
+  el.innerHTML=data.map(o=>{
+    let s=stores.find(x=>x.id===o.storeId);
+    let sc=score(o.pricePerA4);
 
-  let el = document.getElementById("offers");
-  el.innerHTML = "";
+    return `
+      <div class="card">
+        <strong>${o.name}</strong>
+        <span class="badge ${sc}">${sc.toUpperCase()}</span>
+        <div class="small">${s?.name || "Unknown"} • ${o.material} • ${o.surface}</div>
+        <div>Price: ${o.price} ${s?.currency || ""}</div>
+        <div>A4 units: ${o.a4.toFixed(2)}</div>
+        <div><strong>Price per A4: ${o.pricePerA4.toFixed(2)}</strong></div>
+      </div>
+    `;
+  }).join("");
 
-  offers
-    .filter(o => surface==="all" || o.surface===surface)
-    .filter(o => material==="all" || o.material===material)
-    .filter(o => store==="all" || o.storeId===store)
-    .forEach(o=>{
-
-      let s = stores.find(x=>x.id===o.storeId);
-      let c = calc(o);
-      let sc = score(c.pricePerA4);
-
-      el.innerHTML += `
-        <div class="card">
-          <strong>${o.name}</strong>
-          <span class="badge ${sc}">${sc.toUpperCase()}</span>
-
-          <div class="small">${s.name} • ${o.material} • ${o.surface}</div>
-
-          <div>Price: ${o.price} ${s.currency}</div>
-          <div>A4 units: ${c.a4.toFixed(2)}</div>
-
-          <div><strong>Price per A4: ${c.pricePerA4.toFixed(2)}</strong></div>
-        </div>
-      `;
-    });
+  renderSmart();
 }
 
-/* ---------------- ADD STORE ---------------- */
 function addStore(){
-  let s = {
-    id: document.getElementById("name").value.toLowerCase().replace(/\s/g,"_"),
-    name: document.getElementById("name").value,
-    city: document.getElementById("city").value,
-    country: document.getElementById("country").value,
-    currency: document.getElementById("currency").value
-  };
-
-  stores.push(s);
+  stores.push({
+    id:document.getElementById("name").value.toLowerCase().replace(/\s/g,"_"),
+    name:document.getElementById("name").value,
+    city:document.getElementById("city").value,
+    country:document.getElementById("country").value,
+    currency:document.getElementById("currency").value
+  });
   renderStores();
   renderOffers();
 }
 
-/* ---------------- EVENTS ---------------- */
-document.querySelectorAll("select").forEach(s=>{
-  s.addEventListener("change", renderOffers);
-});
+document.querySelectorAll("select").forEach(s=>
+  s.addEventListener("change",renderOffers)
+);
 
-/* ---------------- INIT ---------------- */
-renderStores();
-renderOffers();
-
+loadData();
 </script>
 
 </body>
