@@ -1,0 +1,14 @@
+[
+  {
+    "id":"arches",
+    "name":"Arches Block",
+    "storeId":"ib",
+    "w":300,
+    "h":400,
+    "sheets":20,
+    "price":899,
+    "eff":0.95,
+    "material":"cotton",
+    "surface":"cold"
+  }
+]
