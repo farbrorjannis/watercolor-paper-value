@@ -1,7 +1,16 @@
-{
-  "id": "arches_cold_300",
-  "brand": "Arches",
-  "name": "Cold Press 300gsm",
-  "material": "cotton",
-  "surface": "cold"
-}
+[
+  {
+    "id": "arches_cold_300",
+    "brand": "Arches",
+    "name": "Cold Press 300gsm",
+    "material": "cotton",
+    "surface": "cold"
+  },
+  {
+    "id": "canson_xl_300",
+    "brand": "Canson",
+    "name": "XL Watercolor Paper 300gsm",
+    "material": "cellulose",
+    "surface": "cold"
+  }
+]
