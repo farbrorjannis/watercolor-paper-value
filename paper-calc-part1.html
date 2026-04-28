@@ -1,0 +1,316 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     WATERCOLOUR PAPER CALCULATOR — akvarellskiss.se
+     PART 1 of 3: HTML shell + CSS + Data
+     Paste Parts 2 and 3 where indicated by the comments below.
+════════════════════════════════════════════════════════════════════════════ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paper Price Calculator — akvarellskiss.se</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & tokens ───────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #fcf9f3;
+  --surface:  #f1ede4;
+  --panel:    #ece6dd;
+  --border:   #ddd7ce;
+  --border-md:#cec7bc;
+  --earth:    #5d4a3e;
+  --earth-dk: #3e2e24;
+  --earth-lt: #8a6f61;
+  --text:     #2e2520;
+  --text-md:  #6b5c54;
+  --text-lt:  #9b8c84;
+  --white:    #ffffff;
+  --green:    #3d6b4a;
+  --green-lt: #e8f0eb;
+  --gold:     #b07d2e;
+  --gold-lt:  #f5eddc;
+  --blue-lt:  #e8eaf5;
+  --blue:     #3a3a7a;
+  --r:        12px;
+  --r-sm:     7px;
+  --r-xs:     4px;
+  --sh:       0 1px 8px rgba(60,40,30,.07);
+  --sh-md:    0 2px 18px rgba(60,40,30,.10);
+}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.55;min-height:100vh}
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+.app{max-width:900px;margin:0 auto;padding:1.75rem 1rem 5rem}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+.app-head{text-align:center;margin-bottom:2rem}
+.app-head h1{font-family:'Cormorant Garamond',serif;font-size:clamp(1.9rem,5vw,2.6rem);font-weight:300;color:var(--earth);letter-spacing:.02em;line-height:1.1}
+.app-head .sub{font-size:12.5px;color:var(--text-lt);font-weight:300;letter-spacing:.06em;font-style:italic;margin-top:.25rem}
+.hline{width:40px;height:1px;background:var(--border-md);margin:.65rem auto}
+.brand{font-size:9.5px;color:var(--text-lt);letter-spacing:.15em;text-transform:uppercase;margin-top:.3rem}
+
+/* ── Tip bar ──────────────────────────────────────────────────────────────── */
+.tip-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:.6rem 1rem;font-size:12px;color:var(--text-md);line-height:1.6;margin-bottom:1.25rem;display:flex;gap:.6rem;align-items:flex-start}
+.tip-bar span{flex-shrink:0;font-size:15px;margin-top:1px}
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+.card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border);margin-bottom:.75rem;overflow:hidden}
+
+/* ── Section title ────────────────────────────────────────────────────────── */
+.section-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:var(--text-lt);margin-bottom:.55rem;display:block}
+
+/* ── Format selector ──────────────────────────────────────────────────────── */
+.format-section{padding:1rem 1.2rem}
+.format-grid{display:flex;gap:.4rem;flex-wrap:wrap}
+.fmt-btn{padding:7px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--white);font-family:'DM Sans',sans-serif;font-size:12.5px;color:var(--text-lt);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:64px}
+.fmt-btn .fmt-name{font-weight:500;font-size:13px}
+.fmt-btn .fmt-dim{font-size:10px;opacity:.6}
+.fmt-btn:hover{border-color:var(--earth-lt);color:var(--earth);background:var(--surface)}
+.fmt-btn.active{border-color:var(--earth);background:var(--earth);color:#fff}
+.fmt-btn.active .fmt-dim{opacity:.7}
+
+/* ── Filter bar ───────────────────────────────────────────────────────────── */
+.filter-section{padding:.85rem 1.2rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end}
+.filter-group{display:flex;flex-direction:column;gap:.3rem}
+.seg{display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:2px;gap:2px}
+.seg-btn{padding:5px 10px;border-radius:5px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-lt);cursor:pointer;transition:all .15s;white-space:nowrap}
+.seg-btn:hover{color:var(--earth)}
+.seg-btn.active{background:var(--earth);color:#fff;font-weight:500}
+
+/* ── Winner cards ─────────────────────────────────────────────────────────── */
+.winners{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.65rem;padding:0 1.2rem 1.2rem}
+.winner-card{border-radius:var(--r-sm);padding:.85rem 1rem;border:1.5px solid var(--border);background:var(--surface);transition:box-shadow .15s;cursor:default}
+.winner-card:hover{box-shadow:var(--sh-md)}
+.winner-card.best-deal{border-color:#c8a84a;background:var(--gold-lt)}
+.winner-card.smart-choice{border-color:#7aab8a;background:var(--green-lt)}
+.winner-card.studio-grade{border-color:var(--border-md);background:var(--white)}
+.winner-badge{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.09em;margin-bottom:.4rem;display:flex;align-items:center;gap:4px}
+.winner-card.best-deal .winner-badge{color:var(--gold)}
+.winner-card.smart-choice .winner-badge{color:var(--green)}
+.winner-card.studio-grade .winner-badge{color:var(--earth-lt)}
+.winner-brand{font-size:11px;color:var(--text-lt);margin-bottom:1px}
+.winner-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);font-weight:400;line-height:1.25;margin-bottom:.5rem}
+.winner-cost{font-size:1.5rem;font-family:'Cormorant Garamond',serif;color:var(--earth);font-weight:600;line-height:1}
+.winner-cost-label{font-size:10px;color:var(--text-lt);margin-top:2px}
+.winner-store{font-size:11px;color:var(--text-lt);margin-top:.4rem}
+.winner-score-bar{height:3px;background:var(--border);border-radius:2px;margin-top:.6rem}
+.winner-score-fill{height:3px;border-radius:2px;transition:width .5s ease}
+.winner-card.best-deal .winner-score-fill{background:var(--gold)}
+.winner-card.smart-choice .winner-score-fill{background:var(--green)}
+.winner-card.studio-grade .winner-score-fill{background:var(--earth-lt)}
+
+/* ── Results table ────────────────────────────────────────────────────────── */
+.table-wrap{overflow-x:auto;margin:0 0 0 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--surface);border-bottom:1.5px solid var(--border)}
+thead th{padding:.6rem .75rem;text-align:left;font-size:9.5px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--text-lt);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--earth)}
+thead th.r{text-align:right}
+thead th.sort-asc::after{content:' ↑'}
+thead th.sort-desc::after{content:' ↓'}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface)}
+tbody tr.row-highlight-gold{background:var(--gold-lt)}
+tbody tr.row-highlight-green{background:var(--green-lt)}
+td{padding:.6rem .75rem;color:var(--text-md);vertical-align:middle}
+td.r{text-align:right;font-variant-numeric:tabular-nums}
+td.brand-col{min-width:160px}
+.td-brand{font-weight:500;color:var(--text);font-size:13px}
+.td-product{font-size:11px;color:var(--text-lt);margin-top:1px;line-height:1.3}
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;white-space:nowrap}
+.badge-type-block{background:#ede8e0;color:var(--earth)}
+.badge-type-sheet{background:#e8ede8;color:#3a5e3a}
+.badge-type-roll{background:var(--blue-lt);color:var(--blue)}
+.badge-mat-cotton{background:#f0ede8;color:var(--earth);border:1px solid var(--border-md)}
+.badge-mat-cell{background:var(--surface);color:var(--text-lt);border:1px solid var(--border)}
+.badge-best{background:var(--gold-lt);color:var(--gold);border:1px solid #d4a84a}
+.badge-smart{background:var(--green-lt);color:var(--green);border:1px solid #7aab8a}
+.badge-studio{background:var(--surface);color:var(--earth-lt);border:1px solid var(--border-md)}
+
+/* ── Cost cell ────────────────────────────────────────────────────────────── */
+.cost-val{font-size:14px;font-weight:500;color:var(--text)}
+.cost-val.is-best{color:var(--gold);font-weight:600}
+.cost-val.is-smart{color:var(--green);font-weight:600}
+.cost-total{font-size:11px;color:var(--text-lt);margin-top:1px}
+
+/* ── Score mini bar ───────────────────────────────────────────────────────── */
+.score-wrap{display:flex;align-items:center;gap:5px}
+.score-bar-bg{width:48px;height:4px;background:var(--border);border-radius:2px;flex-shrink:0}
+.score-bar-fill{height:4px;border-radius:2px;background:var(--earth-lt)}
+.score-num{font-size:11px;color:var(--text-lt);width:22px;text-align:right}
+
+/* ── Store link ───────────────────────────────────────────────────────────── */
+.store-link{font-size:11.5px;color:var(--earth-lt);text-decoration:none;border-bottom:1px dotted var(--border-md);transition:color .15s;white-space:nowrap}
+.store-link:hover{color:var(--earth)}
+
+/* ── Add store form ───────────────────────────────────────────────────────── */
+.add-store-section{padding:1rem 1.2rem}
+.store-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.5rem;margin-top:.5rem}
+.fi{display:flex;flex-direction:column;gap:.25rem}
+.fi label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.09em;color:var(--text-lt)}
+.fi input,.fi select{padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:12.5px;color:var(--text);outline:none;transition:border-color .15s}
+.fi input:focus,.fi select:focus{border-color:var(--earth-lt)}
+.form-actions{display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap}
+.btn{padding:.45rem 1rem;border-radius:var(--r-sm);border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:12.5px;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--earth);color:#fff;border-color:var(--earth)}
+.btn-primary:hover{background:var(--earth-dk)}
+.btn-ghost{background:transparent;color:var(--text-lt)}
+.btn-ghost:hover{border-color:var(--earth-lt);color:var(--earth)}
+.custom-stores-list{margin-top:.65rem;display:flex;flex-wrap:wrap;gap:.35rem}
+.custom-store-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:var(--surface);border:1px solid var(--border);font-size:12px;color:var(--text-md)}
+.custom-store-tag button{background:none;border:none;cursor:pointer;color:var(--text-lt);font-size:13px;line-height:1;padding:0;transition:color .15s}
+.custom-store-tag button:hover{color:var(--earth)}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text-lt);font-size:13px}
+
+/* ── Footnote ─────────────────────────────────────────────────────────────── */
+.footnote{font-size:11px;color:var(--text-lt);padding:.65rem 1.2rem 1rem;line-height:1.6;border-top:1px solid var(--border)}
+.footnote a{color:var(--earth-lt);text-decoration:none;border-bottom:1px dotted var(--border-md)}
+
+/* ── Utils ────────────────────────────────────────────────────────────────── */
+.hidden{display:none!important}
+.divider{height:1px;background:var(--border);margin:.2rem 0}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="app-head">
+    <h1>Paper Price Calculator</h1>
+    <div class="hline"></div>
+    <p class="sub">Real cost per A4 — blocks, loose sheets &amp; rolls compared</p>
+    <p class="brand">www.akvarellskiss.se</p>
+  </header>
+
+  <!-- TIP -->
+  <div class="tip-bar">
+    <span>💡</span>
+    <div>Select your target format below. The calculator normalises every product — blocks, loose sheets and rolls — to a true cost per sheet at that size, accounting for cutting waste.</div>
+  </div>
+
+  <!-- FORMAT SELECTOR -->
+  <div class="card">
+    <div class="format-section">
+      <span class="section-label">Calculate cost per format</span>
+      <div class="format-grid" id="formatGrid">
+        <!-- injected by JS -->
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="divider"></div>
+    <div class="filter-section">
+      <div class="filter-group">
+        <span class="section-label" style="margin-bottom:0">Region</span>
+        <div class="seg" id="regionSeg">
+          <button class="seg-btn active" data-v="all">All</button>
+          <button class="seg-btn" data-v="SE">Sweden</button>
+          <button class="seg-btn" data-v="UK">UK</button>
+          <button class="seg-btn" data-v="US">US</button>
+          <button class="seg-btn" data-v="EU">EU</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="section-label" style="margin-bottom:0">Format type</span>
+        <div class="seg" id="typeSeg">
+          <button class="seg-btn active" data-v="all">All</button>
+          <button class="seg-btn" data-v="block">Blocks</button>
+          <button class="seg-btn" data-v="sheet">Loose sheets</button>
+          <button class="seg-btn" data-v="roll">Rolls</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="section-label" style="margin-bottom:0">Material</span>
+        <div class="seg" id="matSeg">
+          <button class="seg-btn active" data-v="all">All</button>
+          <button class="seg-btn" data-v="cotton">Cotton</button>
+          <button class="seg-btn" data-v="cellulose">Cellulose</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINNER CARDS -->
+  <div class="card" id="winnersCard">
+    <div style="padding:.85rem 1.2rem .4rem">
+      <span class="section-label">Top picks for <span id="winnersFormatLabel">A4</span></span>
+    </div>
+    <div class="winners" id="winnersGrid">
+      <!-- injected by JS -->
+    </div>
+  </div>
+
+  <!-- RESULTS TABLE -->
+  <div class="card">
+    <div class="table-wrap">
+      <table id="paperTable">
+        <thead>
+          <tr>
+            <th data-sort="brand">Brand &amp; product</th>
+            <th data-sort="type">Type</th>
+            <th data-sort="gsm" class="r">g/m²</th>
+            <th data-sort="material">Material</th>
+            <th data-sort="costA4" class="r sort-asc">Cost per <span id="thFormat">A4</span></th>
+            <th data-sort="score" class="r">Smart score</th>
+            <th data-sort="totalSheets" class="r">Sheets</th>
+            <th>Store</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="8" class="empty-state">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="footnote">
+      Prices in SEK unless shown otherwise. Cost per sheet calculated using actual paper dimensions with a <strong>12–18% cutting-waste factor</strong> for rolls and loose sheets.
+      Prices are approximate — click store links to verify current prices.
+      Smart Score: price efficiency (40%) + material quality (30%) + format efficiency (20%) + availability (10%).
+    </div>
+  </div>
+
+  <!-- ADD CUSTOM STORE -->
+  <div class="card">
+    <div class="add-store-section">
+      <span class="section-label">Add your local store</span>
+      <p style="font-size:12px;color:var(--text-lt);margin-bottom:.6rem">Know a store with good prices? Add it and compare locally. Saved in your browser.</p>
+      <div class="store-form">
+        <div class="fi"><label>Store name</label><input id="cs-name" type="text" placeholder="e.g. Local Art Supply"></div>
+        <div class="fi"><label>City</label><input id="cs-city" type="text" placeholder="e.g. Gothenburg"></div>
+        <div class="fi"><label>Country</label><input id="cs-country" type="text" placeholder="e.g. SE"></div>
+        <div class="fi"><label>Currency</label>
+          <select id="cs-currency">
+            <option value="SEK">SEK</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+        <div class="fi"><label>Website (optional)</label><input id="cs-url" type="text" placeholder="https://..."></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="addStoreBtn">Add store</button>
+        <button class="btn btn-ghost" id="clearStoresBtn">Clear all custom stores</button>
+      </div>
+      <div class="custom-stores-list" id="customStoresList"></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PASTE PART 2 (DATA) HERE — replace this comment with the <script> block
+════════════════════════════════════════════════════════════════════════════ -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PASTE PART 3 (ENGINE + UI) HERE — replace this comment with the <script> block
+════════════════════════════════════════════════════════════════════════════ -->
+
+</body>
+</html>

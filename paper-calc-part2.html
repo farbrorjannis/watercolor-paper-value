@@ -1,0 +1,180 @@
+<script id="paper-data">
+// ═══════════════════════════════════════════════════════════════════════════
+// PART 2 — DATA: Stores, Products, Offers, Currency rates
+// Paste this entire <script> block where the PART 2 comment is in Part 1
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── CURRENCY RATES (SEK base — update periodically) ─────────────────────
+const FX = { SEK:1, GBP:13.8, USD:10.6, EUR:11.4 };
+
+// ─── A4 reference area in cm² ─────────────────────────────────────────────
+const A4_AREA = 21 * 29.7; // 623.7 cm²
+
+// ─── TARGET FORMATS ───────────────────────────────────────────────────────
+const FORMATS = {
+  A6:  { w:10.5, h:14.8, label:'A6',  dim:'10×15 cm' },
+  A5:  { w:14.8, h:21.0, label:'A5',  dim:'15×21 cm' },
+  A4:  { w:21.0, h:29.7, label:'A4',  dim:'21×30 cm' },
+  A3:  { w:29.7, h:42.0, label:'A3',  dim:'30×42 cm' },
+  A2:  { w:42.0, h:59.4, label:'A2',  dim:'42×59 cm' },
+  FULL:{ w:56.0, h:76.0, label:'Full sheet', dim:'56×76 cm' },
+};
+
+// ─── STORES ───────────────────────────────────────────────────────────────
+// region: SE | UK | US | EU
+const STORES_DEFAULT = [
+  { id:'ibw',        name:'IB Wahlström',        city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://www.ibwahlstrom.se' },
+  { id:'kck',        name:'Konstnärernas (KCK)',  city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://konstnarernas.se' },
+  { id:'artistica',  name:'Artistica',            city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://artistica.nu' },
+  { id:'matton',     name:'Matton',               city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://www.mattonbutiken.se' },
+  { id:'panduro',    name:'Panduro',              city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://panduro.com/sv-se' },
+  { id:'kreatima',   name:'Kreatima',             city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://kreatima.com' },
+  { id:'jacksons',   name:"Jackson's Art",        city:'London',    country:'UK', currency:'GBP', region:'UK', url:'https://www.jacksonsart.com' },
+  { id:'cass',       name:'Cass Art',             city:'London',    country:'UK', currency:'GBP', region:'UK', url:'https://www.cassart.co.uk' },
+  { id:'dickblick',  name:'Dick Blick',           city:'New York',  country:'US', currency:'USD', region:'US', url:'https://www.dickblick.com' },
+  { id:'jerrys',     name:"Jerry's Artarama",     city:'New York',  country:'US', currency:'USD', region:'US', url:'https://www.jerrysartarama.com' },
+  { id:'blicks',     name:'Blick Art Materials',  city:'Chicago',   country:'US', currency:'USD', region:'US', url:'https://www.dickblick.com' },
+  { id:'gerstaecker',name:'Gerstaecker',          city:'Hamburg',   country:'DE', currency:'EUR', region:'EU', url:'https://www.gerstaecker.de' },
+  { id:'modulor',    name:'Modulor',              city:'Berlin',    country:'DE', currency:'EUR', region:'EU', url:'https://www.modulor.de' },
+  { id:'schleiper',  name:'Schleiper',            city:'Brussels',  country:'BE', currency:'EUR', region:'EU', url:'https://www.schleiper.com' },
+];
+
+// ─── PRODUCTS ─────────────────────────────────────────────────────────────
+// material: cotton100 | cotton50 | cotton35 | cotton25 | cellulose | mixed
+// surface:  rough | cold | hot
+// type:     block | sheet | roll
+const PRODUCTS = [
+  // ARCHES (France) — 100% cotton, archival
+  { id:'arches-300-block-a4',   brand:'Arches',              name:'Block 300g A4 12 sheets Cold Press',          type:'block', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'arches-300-sheet-cold', brand:'Arches',              name:'Loose sheets 300g 56×76cm 10-pack Cold Press', type:'sheet', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'arches-300-sheet-rough',brand:'Arches',              name:'Loose sheets 300g 56×76cm 10-pack Rough',      type:'sheet', material:'cotton100', surface:'rough',gsm:300, archival:true  },
+  { id:'arches-640-sheet',      brand:'Arches',              name:'Loose sheets 640g 56×76cm 5-pack Cold Press',  type:'sheet', material:'cotton100', surface:'cold', gsm:640, archival:true  },
+  { id:'arches-300-roll',       brand:'Arches',              name:'Roll 300g 113×915cm Cold Press',               type:'roll',  material:'cotton100', surface:'cold', gsm:300, archival:true  },
+
+  // SAUNDERS WATERFORD (UK) — 100% cotton
+  { id:'sw-300-block-a4',       brand:'Saunders Waterford',  name:'Block 300g A4 20 sheets Cold Press',          type:'block', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'sw-300-block-a3',       brand:'Saunders Waterford',  name:'Block 300g A3 20 sheets Cold Press',          type:'block', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'sw-300-sheet',          brand:'Saunders Waterford',  name:'Loose sheets 300g 56×76cm 5-pack',            type:'sheet', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'sw-300-roll',           brand:'Saunders Waterford',  name:'Roll 300g 113×1000cm',                        type:'roll',  material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'sw-300-uk-roll',        brand:'Saunders Waterford',  name:'Roll 300g 140×1000cm',                        type:'roll',  material:'cotton100', surface:'cold', gsm:300, archival:true  },
+
+  // FABRIANO ARTISTICO — 100% cotton
+  { id:'fab-artistico-300-a4',  brand:'Fabriano Artistico',  name:'Block 300g A4 20 sheets Cold Press',          type:'block', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'fab-artistico-sheet',   brand:'Fabriano Artistico',  name:'Loose sheets 300g 56×76cm 10-pack',           type:'sheet', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'fab-artistico-roll',    brand:'Fabriano Artistico',  name:'Roll 300g 150×1000cm',                        type:'roll',  material:'cotton100', surface:'cold', gsm:300, archival:true  },
+
+  // FABRIANO WATERCOLOUR / 1264 — cellulose
+  { id:'fab-wc-200-a4',         brand:'Fabriano Watercolour',name:'Block 200g A4 30 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:200, archival:false },
+  { id:'fab-wc-300-50x70',      brand:'Fabriano Watercolour',name:'Loose sheets 300g 50×70cm 25-pack',           type:'sheet', material:'cellulose', surface:'cold', gsm:300, archival:false },
+  { id:'fab-torchon-sheet',     brand:'Fabriano Watercolour',name:'Torchon 270g 50×70cm 25-pack Rough',          type:'sheet', material:'cellulose', surface:'rough',gsm:270, archival:false },
+  { id:'fab-1264-300-a3',       brand:'Fabriano 1264',       name:'Block 300g A3 20 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+
+  // CANSON MONTVAL — cellulose
+  { id:'montval-300-block-a4',  brand:'Canson Montval',      name:'Block 300g A4 20 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+  { id:'montval-200-block-a4',  brand:'Canson Montval',      name:'Block 200g A4 20 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:200, archival:false },
+  { id:'montval-300-block-a3',  brand:'Canson Montval',      name:'Block 300g 24×32cm 100 sheets',               type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+  { id:'montval-300-roll',      brand:'Canson Montval',      name:'Roll 300g 113×960cm',                         type:'roll',  material:'cellulose', surface:'cold', gsm:300, archival:false },
+
+  // BOCKINGFORD — cellulose
+  { id:'bock-300-block-a4',     brand:'Bockingford',         name:'Block 300g A4 18 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+  { id:'bock-300-block-a3',     brand:'Bockingford',         name:'Block 300g A3 18 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+
+  // HAHNEMÜHLE — cellulose
+  { id:'hahne-200-block-a4',    brand:'Hahnemühle',          name:'Block 200g A4 20 sheets',                     type:'block', material:'cellulose', surface:'cold', gsm:200, archival:false },
+  { id:'hahne-300-block-a4',    brand:'Hahnemühle Collection',name:'Block 300g A4 20 sheets',                    type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+  { id:'hahne-300-roll',        brand:'Hahnemühle Collection',name:'Roll 300g 106×1000cm',                       type:'roll',  material:'cellulose', surface:'cold', gsm:300, archival:false },
+
+  // WINSOR & NEWTON — cotton25
+  { id:'wn-300-sheet',          brand:'Winsor & Newton',     name:'Loose sheet 300g 56×76cm',                    type:'sheet', material:'cotton25',  surface:'cold', gsm:300, archival:true  },
+  { id:'wn-300-block-a4',       brand:'Winsor & Newton',     name:'Block 300g A4 20 sheets',                     type:'block', material:'cotton25',  surface:'cold', gsm:300, archival:true  },
+
+  // IBW35 — cotton35
+  { id:'ibw-300-a3-100',        brand:'IBW35',               name:'Loose sheets 300g A3 100-pack',               type:'sheet', material:'cotton35',  surface:'cold', gsm:300, archival:false },
+  { id:'ibw-300-a4-100',        brand:'IBW35',               name:'Loose sheets 300g A4 100-pack',               type:'sheet', material:'cotton35',  surface:'cold', gsm:300, archival:false },
+
+  // US BRANDS
+  { id:'strathmore-400-block',  brand:'Strathmore 400',      name:'Block 300g 9×12in 15 sheets',                 type:'block', material:'cotton25',  surface:'cold', gsm:300, archival:false },
+  { id:'stillman-300-block',    brand:'Stillman & Birn',     name:'Beta Block 270g A4 24 sheets',                type:'block', material:'cellulose', surface:'cold', gsm:270, archival:true  },
+];
+
+// ─── OFFERS ───────────────────────────────────────────────────────────────
+// dim_w, dim_h in cm | count = number of sheets (1 for rolls)
+// efficiency: cutting waste factor (1.0 = no waste, 0.82 = 18% waste for rolls)
+const OFFERS = [
+  // ── SE — IB Wahlström ──────────────────────────────────────────────────
+  { product:'montval-300-block-a4',  store:'ibw',       price:179,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'montval-200-block-a4',  store:'ibw',       price:129,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'bock-300-block-a4',     store:'ibw',       price:219,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:18,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'bock-300-block-a3',     store:'ibw',       price:269,   currency:'SEK', dim_w:29.7, dim_h:42.0,  count:18,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'sw-300-block-a4',       store:'ibw',       price:289,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'sw-300-block-a3',       store:'ibw',       price:389,   currency:'SEK', dim_w:29.7, dim_h:42.0,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'sw-300-sheet',          store:'ibw',       price:395,   currency:'SEK', dim_w:56,   dim_h:76,    count:5,   efficiency:0.88, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellpapper' },
+  { product:'fab-wc-200-a4',         store:'ibw',       price:149,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:30,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'fab-artistico-300-a4',  store:'ibw',       price:299,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'ibw-300-a3-100',        store:'ibw',       price:549,   currency:'SEK', dim_w:29.7, dim_h:42.0,  count:100, efficiency:1.00, url:'https://www.ibwahlstrom.se/akvarellpapper-ibw-a3-300g-grov-100ark' },
+  { product:'ibw-300-a4-100',        store:'ibw',       price:389,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:100, efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellpapper' },
+  { product:'hahne-200-block-a4',    store:'ibw',       price:179,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+
+  // ── SE — Konstnärernas (KCK) ───────────────────────────────────────────
+  { product:'arches-300-block-a4',   store:'kck',       price:349,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:12,  efficiency:1.00, url:'https://konstnarernas.se/product.html/akvarellblock-arches-300g-12-ark' },
+  { product:'arches-300-sheet-cold', store:'kck',       price:699,   currency:'SEK', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://konstnarernas.se/product.html/arches-akvarellpapper-fin-grang' },
+  { product:'arches-300-sheet-rough',store:'kck',       price:699,   currency:'SEK', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'arches-640-sheet',      store:'kck',       price:799,   currency:'SEK', dim_w:56,   dim_h:76,    count:5,   efficiency:0.88, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'arches-300-roll',       store:'kck',       price:1850,  currency:'SEK', dim_w:113,  dim_h:915,   count:1,   efficiency:0.82, url:'https://konstnarernas.se/product.html/arches-300g-akvarellpapper-rulle' },
+  { product:'sw-300-roll',           store:'kck',       price:1750,  currency:'SEK', dim_w:113,  dim_h:1000,  count:1,   efficiency:0.82, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'hahne-300-block-a4',    store:'kck',       price:249,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'hahne-300-roll',        store:'kck',       price:1290,  currency:'SEK', dim_w:106,  dim_h:1000,  count:1,   efficiency:0.82, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'montval-300-roll',      store:'kck',       price:890,   currency:'SEK', dim_w:113,  dim_h:960,   count:1,   efficiency:0.82, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'fab-1264-300-a3',       store:'kck',       price:189,   currency:'SEK', dim_w:29.7, dim_h:42.0,  count:20,  efficiency:1.00, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'fab-artistico-sheet',   store:'kck',       price:649,   currency:'SEK', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+
+  // ── SE — Artistica ─────────────────────────────────────────────────────
+  { product:'fab-artistico-sheet',   store:'artistica', price:595,   currency:'SEK', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://artistica.nu/papper-kartong-block/akvarellpapper' },
+  { product:'fab-artistico-roll',    store:'artistica', price:1950,  currency:'SEK', dim_w:150,  dim_h:1000,  count:1,   efficiency:0.82, url:'https://artistica.nu/papper-kartong-block/akvarellpapper' },
+  { product:'fab-torchon-sheet',     store:'artistica', price:485,   currency:'SEK', dim_w:50,   dim_h:70,    count:25,  efficiency:0.88, url:'https://artistica.nu/papper-kartong-block/akvarellpapper' },
+  { product:'fab-wc-300-50x70',      store:'artistica', price:320,   currency:'SEK', dim_w:50,   dim_h:70,    count:25,  efficiency:0.88, url:'https://artistica.nu/papper-kartong-block/akvarellpapper' },
+
+  // ── SE — Panduro ───────────────────────────────────────────────────────
+  { product:'arches-300-roll',       store:'panduro',   price:1890,  currency:'SEK', dim_w:113,  dim_h:915,   count:1,   efficiency:0.82, url:'https://panduro.com/sv-se/produkter/mala-rita' },
+  { product:'montval-300-block-a4',  store:'panduro',   price:189,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://panduro.com/sv-se/produkter/mala-rita' },
+
+  // ── SE — Matton ────────────────────────────────────────────────────────
+  { product:'wn-300-sheet',          store:'matton',    price:75,    currency:'SEK', dim_w:56,   dim_h:76,    count:1,   efficiency:0.88, url:'https://www.mattonbutiken.se/kategori/papper/akvarellpapper' },
+  { product:'wn-300-block-a4',       store:'matton',    price:259,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.mattonbutiken.se/kategori/papper/akvarellpapper' },
+  { product:'montval-300-block-a3',  store:'matton',    price:299,   currency:'SEK', dim_w:24,   dim_h:32,    count:100, efficiency:1.00, url:'https://www.mattonbutiken.se/kategori/papper/akvarellpapper' },
+
+  // ── SE — Kreatima ──────────────────────────────────────────────────────
+  { product:'hahne-300-block-a4',    store:'kreatima',  price:239,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://kreatima.com/akvarellpapper' },
+  { product:'bock-300-block-a4',     store:'kreatima',  price:209,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:18,  efficiency:1.00, url:'https://kreatima.com/akvarellpapper' },
+
+  // ── UK — Jackson's Art ─────────────────────────────────────────────────
+  { product:'arches-300-block-a4',   store:'jacksons',  price:18.50, currency:'GBP', dim_w:21,   dim_h:29.7,  count:12,  efficiency:1.00, url:'https://www.jacksonsart.com/watercolour-paper' },
+  { product:'arches-300-sheet-cold', store:'jacksons',  price:42.00, currency:'GBP', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://www.jacksonsart.com/watercolour-paper' },
+  { product:'sw-300-uk-roll',        store:'jacksons',  price:89.00, currency:'GBP', dim_w:140,  dim_h:1000,  count:1,   efficiency:0.82, url:'https://www.jacksonsart.com/watercolour-paper' },
+  { product:'sw-300-block-a4',       store:'jacksons',  price:13.50, currency:'GBP', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.jacksonsart.com/watercolour-paper' },
+  { product:'fab-artistico-300-a4',  store:'jacksons',  price:16.50, currency:'GBP', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.jacksonsart.com/watercolour-paper' },
+
+  // ── UK — Cass Art ──────────────────────────────────────────────────────
+  { product:'sw-300-block-a4',       store:'cass',      price:14.99, currency:'GBP', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.cassart.co.uk/watercolour' },
+  { product:'bock-300-block-a4',     store:'cass',      price:8.99,  currency:'GBP', dim_w:21,   dim_h:29.7,  count:18,  efficiency:1.00, url:'https://www.cassart.co.uk/watercolour' },
+  { product:'arches-300-block-a4',   store:'cass',      price:19.99, currency:'GBP', dim_w:21,   dim_h:29.7,  count:12,  efficiency:1.00, url:'https://www.cassart.co.uk/watercolour' },
+
+  // ── US — Dick Blick ────────────────────────────────────────────────────
+  { product:'arches-300-block-a4',   store:'dickblick', price:24.99, currency:'USD', dim_w:21,   dim_h:29.7,  count:12,  efficiency:1.00, url:'https://www.dickblick.com/products/arches-watercolor-block' },
+  { product:'strathmore-400-block',  store:'dickblick', price:14.99, currency:'USD', dim_w:22.9, dim_h:30.5,  count:15,  efficiency:1.00, url:'https://www.dickblick.com/products/strathmore-watercolor-pads' },
+  { product:'fab-artistico-300-a4',  store:'dickblick', price:22.99, currency:'USD', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.dickblick.com/products/fabriano-artistico-watercolor-block' },
+
+  // ── US — Jerry's Artarama ──────────────────────────────────────────────
+  { product:'stillman-300-block',    store:'jerrys',    price:19.99, currency:'USD', dim_w:21,   dim_h:29.7,  count:24,  efficiency:1.00, url:'https://www.jerrysartarama.com' },
+  { product:'arches-300-sheet-cold', store:'jerrys',    price:38.99, currency:'USD', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://www.jerrysartarama.com' },
+
+  // ── EU — Gerstaecker ───────────────────────────────────────────────────
+  { product:'arches-300-sheet-cold', store:'gerstaecker',price:39.99,currency:'EUR', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://www.gerstaecker.de/akvarellpapper' },
+  { product:'hahne-300-block-a4',    store:'gerstaecker',price:18.99,currency:'EUR', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.gerstaecker.de' },
+  { product:'fab-artistico-300-a4',  store:'gerstaecker',price:21.50,currency:'EUR', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.gerstaecker.de' },
+
+  // ── EU — Modulor ───────────────────────────────────────────────────────
+  { product:'fab-artistico-sheet',   store:'modulor',   price:44.99, currency:'EUR', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://www.modulor.de/aquarellpapier' },
+  { product:'arches-300-sheet-cold', store:'modulor',   price:42.00, currency:'EUR', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://www.modulor.de/aquarellpapier' },
+];
+</script>
