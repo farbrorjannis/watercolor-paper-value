@@ -1,9 +1,0 @@
-[
-{"id":"ib","name":"IB Wahlström","city":"Stockholm","country":"SE","currency":"SEK"},
-{"id":"kreatima","name":"Kreatima","city":"Stockholm","country":"SE","currency":"SEK"},
-{"id":"kck","name":"KCK","city":"Stockholm","country":"SE","currency":"SEK"},
-{"id":"jordi","name":"Jordi","city":"Stockholm","country":"SE","currency":"SEK"},
-{"id":"cass_art_uk","name":"Cass Art","city":"London","country":"UK","currency":"GBP"},
-{"id":"blick_us","name":"Blick Art","city":"USA","country":"US","currency":"USD"},
-{"id":"eu_online","name":"EU Art Supply","city":"EU","country":"EU","currency":"EUR"}
-]
