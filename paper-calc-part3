@@ -1,0 +1,344 @@
+<script id="paper-engine">
+// ═══════════════════════════════════════════════════════════════════════════
+// PART 3 — ENGINE + UI
+// Paste this entire <script> block where the PART 3 comment is in Part 1
+// ═══════════════════════════════════════════════════════════════════════════
+'use strict';
+
+const STATE = {
+  format:   'A4',
+  region:   'all',
+  type:     'all',
+  material: 'all',
+  sortCol:  'costA4',
+  sortAsc:  true,
+  customStores: [],
+};
+
+const g = id => document.getElementById(id);
+
+function toSEK(price, currency) {
+  return price * (FX[currency] || 1);
+}
+
+function sheetsPerPaper(offer, fmt) {
+  const f = FORMATS[fmt];
+  if (!f) return 1;
+  const cols = Math.floor(offer.dim_w / f.w);
+  const rows = Math.floor(offer.dim_h / f.h);
+  return Math.max(1, cols * rows);
+}
+
+function totalUsableSheets(offer, fmt) {
+  const spp = sheetsPerPaper(offer, fmt);
+  return offer.count * spp * offer.efficiency;
+}
+
+function costPerSheet(offer, fmt) {
+  const usable = totalUsableSheets(offer, fmt);
+  if (usable <= 0) return Infinity;
+  return toSEK(offer.price, offer.currency) / usable;
+}
+
+function materialScore(material) {
+  const scores = { cotton100:1.0, cotton50:0.85, cotton35:0.72, cotton25:0.60, mixed:0.55, cellulose:0.35 };
+  return scores[material] || 0.35;
+}
+
+function formatEfficiency(offer, fmt) {
+  const f    = FORMATS[fmt];
+  const spp  = sheetsPerPaper(offer, fmt);
+  const paperArea = offer.dim_w * offer.dim_h;
+  const usedArea  = spp * f.w * f.h;
+  return Math.min(1, usedArea / paperArea);
+}
+
+function availabilityScore(store) {
+  const allStores = [...STORES_DEFAULT, ...STATE.customStores];
+  const s = allStores.find(x => x.id === store);
+  if (!s) return 0.5;
+  if (STATE.region === 'all') return 0.8;
+  return s.region === STATE.region ? 1.0 : 0.4;
+}
+
+function smartScore(offer, product, fmt, allCosts) {
+  const cost    = costPerSheet(offer, fmt);
+  const minCost = Math.min(...allCosts.filter(c => c > 0 && isFinite(c)));
+  const maxCost = Math.max(...allCosts.filter(c => c > 0 && isFinite(c)));
+  const priceEff = maxCost === minCost ? 1
+    : 1 - (cost - minCost) / (maxCost - minCost);
+  const matQ   = materialScore(product.material);
+  const fmtEff = formatEfficiency(offer, fmt);
+  const avail  = availabilityScore(offer.store);
+  const archBonus = product.archival ? 0.04 : 0;
+  const raw = (priceEff * 0.40) + (matQ * 0.30) + (fmtEff * 0.20) + (avail * 0.10) + archBonus;
+  return Math.round(Math.min(1, raw) * 100);
+}
+
+function buildRows() {
+  const allStores = [...STORES_DEFAULT, ...STATE.customStores];
+  let rows = OFFERS.map(offer => {
+    const product = PRODUCTS.find(p => p.id === offer.product);
+    const store   = allStores.find(s => s.id === offer.store);
+    if (!product || !store) return null;
+    const f = FORMATS[STATE.format];
+    if (offer.dim_w < f.w || offer.dim_h < f.h) return null;
+    if (STATE.region !== 'all' && store.region !== STATE.region) return null;
+    if (STATE.type !== 'all' && product.type !== STATE.type) return null;
+    if (STATE.material === 'cotton' && !product.material.startsWith('cotton')) return null;
+    if (STATE.material === 'cellulose' && product.material !== 'cellulose') return null;
+    return { offer, product, store };
+  }).filter(Boolean);
+
+  if (rows.length === 0) return [];
+
+  const allCosts = rows.map(r => costPerSheet(r.offer, STATE.format));
+  rows = rows.map((r, i) => ({
+    ...r,
+    costSEK:     costPerSheet(r.offer, STATE.format),
+    totalSheets: Math.round(totalUsableSheets(r.offer, STATE.format)),
+    score:       smartScore(r.offer, r.product, STATE.format, allCosts),
+  }));
+
+  rows.sort((a, b) => {
+    let va, vb;
+    if (STATE.sortCol === 'costA4')       { va = a.costSEK; vb = b.costSEK; }
+    else if (STATE.sortCol === 'score')   { va = a.score;   vb = b.score;   }
+    else if (STATE.sortCol === 'gsm')     { va = a.product.gsm; vb = b.product.gsm; }
+    else if (STATE.sortCol === 'brand')   { va = a.product.brand; vb = b.product.brand; }
+    else if (STATE.sortCol === 'type')    { va = a.product.type; vb = b.product.type; }
+    else if (STATE.sortCol === 'material'){ va = a.product.material; vb = b.product.material; }
+    else if (STATE.sortCol === 'totalSheets'){ va = a.totalSheets; vb = b.totalSheets; }
+    else { va = a.costSEK; vb = b.costSEK; }
+    if (typeof va === 'string') return STATE.sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    return STATE.sortAsc ? va - vb : vb - va;
+  });
+
+  return rows;
+}
+
+function assignWinners(rows) {
+  if (!rows.length) return {};
+  const byCost  = [...rows].sort((a,b) => a.costSEK - b.costSEK);
+  const byScore = [...rows].sort((a,b) => b.score - a.score);
+  const studioRows = rows.filter(r => r.product.material === 'cotton100' && r.product.archival);
+  const byStudio   = [...studioRows].sort((a,b) => b.score - a.score);
+  const winners = {};
+  const bestDealKey  = byCost[0]  ? `${byCost[0].offer.product}|${byCost[0].offer.store}`  : null;
+  const smartKey     = byScore[0] ? `${byScore[0].offer.product}|${byScore[0].offer.store}` : null;
+  const studioKey    = byStudio[0]? `${byStudio[0].offer.product}|${byStudio[0].offer.store}`:null;
+  if (bestDealKey) winners[bestDealKey] = (winners[bestDealKey]||[]).concat('best');
+  if (smartKey && smartKey !== bestDealKey) winners[smartKey] = (winners[smartKey]||[]).concat('smart');
+  if (studioKey && studioKey !== bestDealKey && studioKey !== smartKey) winners[studioKey] = (winners[studioKey]||[]).concat('studio');
+  return { winners, bestDeal: byCost[0], smartChoice: byScore[0], studioGrade: byStudio[0] };
+}
+
+function renderWinners(rows) {
+  g('winnersFormatLabel').textContent = STATE.format === 'FULL' ? 'Full sheet (56×76cm)' : STATE.format;
+  if (!rows.length) {
+    g('winnersGrid').innerHTML = '<p style="padding:.5rem 0;font-size:13px;color:var(--text-lt)">No products match the current filters.</p>';
+    return;
+  }
+  const { bestDeal, smartChoice, studioGrade } = assignWinners(rows);
+  const makeCard = (row, cls, icon, label) => {
+    if (!row) return '';
+    const costStr = formatCost(row.costSEK);
+    return `
+    <div class="winner-card ${cls}">
+      <div class="winner-badge">${icon} ${label}</div>
+      <div class="winner-brand">${row.product.brand}</div>
+      <div class="winner-name">${row.product.name}</div>
+      <div class="winner-cost">${costStr}</div>
+      <div class="winner-cost-label">per ${STATE.format === 'FULL' ? 'full sheet' : STATE.format} · ${row.store.name}</div>
+      <div class="winner-store">${matLabel(row.product.material)} · ${row.product.gsm}g/m²${row.product.archival?' · archival':''}</div>
+      <div class="winner-score-bar"><div class="winner-score-fill" style="width:${row.score}%"></div></div>
+    </div>`;
+  };
+  g('winnersGrid').innerHTML =
+    makeCard(bestDeal,   'best-deal',    '🥇', 'Best Deal') +
+    makeCard(smartChoice,'smart-choice', '⭐', 'Smart Choice') +
+    makeCard(studioGrade,'studio-grade', '🎨', 'Studio Grade');
+}
+
+function formatCost(sekCost) {
+  return sekCost.toFixed(1) + ' kr';
+}
+
+function matLabel(mat) {
+  const labels = { cotton100:'100% cotton', cotton50:'50% cotton', cotton35:'35% cotton',
+                   cotton25:'25% cotton', cellulose:'Cellulose', mixed:'Mixed' };
+  return labels[mat] || mat;
+}
+
+function typeBadge(type) {
+  const map    = { block:'badge-type-block', sheet:'badge-type-sheet', roll:'badge-type-roll' };
+  const labels = { block:'Block', sheet:'Loose sheets', roll:'Roll' };
+  return `<span class="badge ${map[type]||''}">${labels[type]||type}</span>`;
+}
+
+function matBadge(mat) {
+  const isCotton = mat.startsWith('cotton');
+  return `<span class="badge ${isCotton?'badge-mat-cotton':'badge-mat-cell'}">${matLabel(mat)}</span>`;
+}
+
+function renderTable(rows) {
+  const tbody = g('tableBody');
+  g('thFormat').textContent = STATE.format === 'FULL' ? 'Full sheet' : STATE.format;
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No products match — try widening your filters or select a smaller format.</td></tr>`;
+    return;
+  }
+  const { winners } = assignWinners(rows);
+  tbody.innerHTML = rows.map(row => {
+    const key    = `${row.offer.product}|${row.offer.store}`;
+    const wlist  = winners[key] || [];
+    const rowCls = wlist.includes('best') ? 'row-highlight-gold' : wlist.includes('smart') ? 'row-highlight-green' : '';
+    const costStr = formatCost(row.costSEK);
+    const costCls = wlist.includes('best') ? 'is-best' : wlist.includes('smart') ? 'is-smart' : '';
+    const winBadges = wlist.map(w =>
+      w==='best'  ? '<span class="badge badge-best">🥇 Best Deal</span>' :
+      w==='smart' ? '<span class="badge badge-smart">⭐ Smart Choice</span>' :
+      w==='studio'? '<span class="badge badge-studio">🎨 Studio Grade</span>' : ''
+    ).join(' ');
+    const origPrice = row.offer.currency !== 'SEK'
+      ? `${row.offer.price} ${row.offer.currency}` : `${row.offer.price} kr`;
+    const scoreBar = `<div class="score-wrap">
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:${row.score}%"></div></div>
+      <span class="score-num">${row.score}</span>
+    </div>`;
+    return `<tr class="${rowCls}">
+      <td class="brand-col">
+        <div class="td-brand">${row.product.brand}</div>
+        <div class="td-product">${row.product.name}</div>
+        ${winBadges ? `<div style="margin-top:4px">${winBadges}</div>` : ''}
+      </td>
+      <td>${typeBadge(row.product.type)}</td>
+      <td class="r">${row.product.gsm}</td>
+      <td>${matBadge(row.product.material)}</td>
+      <td class="r">
+        <div class="cost-val ${costCls}">${costStr}</div>
+        <div class="cost-total">${origPrice} · ${row.totalSheets} sheets</div>
+      </td>
+      <td class="r">${scoreBar}</td>
+      <td class="r">${row.totalSheets}</td>
+      <td><a class="store-link" href="${row.offer.url}" target="_blank" rel="noopener">${row.store.name} ↗</a>
+        <div style="font-size:10px;color:var(--text-lt);margin-top:2px">${row.store.city}</div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function render() {
+  const rows = buildRows();
+  renderWinners(rows);
+  renderTable(rows);
+  updateSortHeaders();
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll('#paperTable thead th[data-sort]').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+    if (th.dataset.sort === STATE.sortCol) th.classList.add(STATE.sortAsc ? 'sort-asc' : 'sort-desc');
+  });
+}
+
+function renderFormatGrid() {
+  const grid = g('formatGrid');
+  grid.innerHTML = Object.entries(FORMATS).map(([key, f]) => `
+    <button class="fmt-btn ${key===STATE.format?'active':''}" data-fmt="${key}">
+      <span class="fmt-name">${f.label}</span>
+      <span class="fmt-dim">${f.dim}</span>
+    </button>`).join('');
+  grid.querySelectorAll('.fmt-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      STATE.format = this.dataset.fmt;
+      grid.querySelectorAll('.fmt-btn').forEach(b => b.classList.toggle('active', b===this));
+      render();
+    });
+  });
+}
+
+function initSeg(segId, stateKey) {
+  g(segId).querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      STATE[stateKey] = this.dataset.v;
+      g(segId).querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b===this));
+      render();
+    });
+  });
+}
+
+function initTableSort() {
+  document.querySelectorAll('#paperTable thead th[data-sort]').forEach(th => {
+    th.addEventListener('click', function() {
+      const col = this.dataset.sort;
+      if (STATE.sortCol === col) STATE.sortAsc = !STATE.sortAsc;
+      else { STATE.sortCol = col; STATE.sortAsc = col === 'costA4'; }
+      render();
+    });
+  });
+}
+
+function loadCustomStores() {
+  try { STATE.customStores = JSON.parse(localStorage.getItem('wpc_custom_stores') || '[]'); }
+  catch(e) { STATE.customStores = []; }
+}
+
+function saveCustomStores() {
+  try { localStorage.setItem('wpc_custom_stores', JSON.stringify(STATE.customStores)); } catch(e){}
+}
+
+function renderCustomStoresList() {
+  const el = g('customStoresList');
+  if (!STATE.customStores.length) { el.innerHTML = ''; return; }
+  el.innerHTML = STATE.customStores.map((s,i) => `
+    <span class="custom-store-tag">
+      ${s.name} <span style="opacity:.5">(${s.city}, ${s.currency})</span>
+      <button onclick="removeCustomStore(${i})" title="Remove">×</button>
+    </span>`).join('');
+}
+
+window.removeCustomStore = function(i) {
+  STATE.customStores.splice(i,1);
+  saveCustomStores();
+  renderCustomStoresList();
+  render();
+};
+
+function initAddStore() {
+  g('addStoreBtn').addEventListener('click', () => {
+    const name     = g('cs-name').value.trim();
+    const city     = g('cs-city').value.trim();
+    const country  = g('cs-country').value.trim().toUpperCase();
+    const currency = g('cs-currency').value;
+    const url      = g('cs-url').value.trim();
+    if (!name || !city) { alert('Please enter at least a store name and city.'); return; }
+    const id = 'custom_' + Date.now();
+    STATE.customStores.push({ id, name, city, country:country||'??', currency, region:country||'??', url:url||'#', custom:true });
+    saveCustomStores();
+    renderCustomStoresList();
+    g('cs-name').value=''; g('cs-city').value=''; g('cs-country').value=''; g('cs-url').value='';
+    render();
+  });
+  g('clearStoresBtn').addEventListener('click', () => {
+    if (!STATE.customStores.length) return;
+    if (!confirm('Remove all custom stores?')) return;
+    STATE.customStores = [];
+    saveCustomStores();
+    renderCustomStoresList();
+    render();
+  });
+}
+
+(function init() {
+  loadCustomStores();
+  renderFormatGrid();
+  initSeg('regionSeg',  'region');
+  initSeg('typeSeg',    'type');
+  initSeg('matSeg',     'material');
+  initTableSort();
+  initAddStore();
+  renderCustomStoresList();
+  render();
+})();
+</script>
