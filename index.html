@@ -1,0 +1,834 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     WATERCOLOUR PAPER CALCULATOR — akvarellskiss.se
+     PART 1 of 3: HTML shell + CSS + Data
+     Paste Parts 2 and 3 where indicated by the comments below.
+════════════════════════════════════════════════════════════════════════════ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paper Price Calculator — akvarellskiss.se</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & tokens ───────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:       #fcf9f3;
+  --surface:  #f1ede4;
+  --panel:    #ece6dd;
+  --border:   #ddd7ce;
+  --border-md:#cec7bc;
+  --earth:    #5d4a3e;
+  --earth-dk: #3e2e24;
+  --earth-lt: #8a6f61;
+  --text:     #2e2520;
+  --text-md:  #6b5c54;
+  --text-lt:  #9b8c84;
+  --white:    #ffffff;
+  --green:    #3d6b4a;
+  --green-lt: #e8f0eb;
+  --gold:     #b07d2e;
+  --gold-lt:  #f5eddc;
+  --blue-lt:  #e8eaf5;
+  --blue:     #3a3a7a;
+  --r:        12px;
+  --r-sm:     7px;
+  --r-xs:     4px;
+  --sh:       0 1px 8px rgba(60,40,30,.07);
+  --sh-md:    0 2px 18px rgba(60,40,30,.10);
+}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.55;min-height:100vh}
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+.app{max-width:900px;margin:0 auto;padding:1.75rem 1rem 5rem}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+.app-head{text-align:center;margin-bottom:2rem}
+.app-head h1{font-family:'Cormorant Garamond',serif;font-size:clamp(1.9rem,5vw,2.6rem);font-weight:300;color:var(--earth);letter-spacing:.02em;line-height:1.1}
+.app-head .sub{font-size:12.5px;color:var(--text-lt);font-weight:300;letter-spacing:.06em;font-style:italic;margin-top:.25rem}
+.hline{width:40px;height:1px;background:var(--border-md);margin:.65rem auto}
+.brand{font-size:9.5px;color:var(--text-lt);letter-spacing:.15em;text-transform:uppercase;margin-top:.3rem}
+
+/* ── Tip bar ──────────────────────────────────────────────────────────────── */
+.tip-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:.6rem 1rem;font-size:12px;color:var(--text-md);line-height:1.6;margin-bottom:1.25rem;display:flex;gap:.6rem;align-items:flex-start}
+.tip-bar span{flex-shrink:0;font-size:15px;margin-top:1px}
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+.card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border);margin-bottom:.75rem;overflow:hidden}
+
+/* ── Section title ────────────────────────────────────────────────────────── */
+.section-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:var(--text-lt);margin-bottom:.55rem;display:block}
+
+/* ── Format selector ──────────────────────────────────────────────────────── */
+.format-section{padding:1rem 1.2rem}
+.format-grid{display:flex;gap:.4rem;flex-wrap:wrap}
+.fmt-btn{padding:7px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--white);font-family:'DM Sans',sans-serif;font-size:12.5px;color:var(--text-lt);cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:64px}
+.fmt-btn .fmt-name{font-weight:500;font-size:13px}
+.fmt-btn .fmt-dim{font-size:10px;opacity:.6}
+.fmt-btn:hover{border-color:var(--earth-lt);color:var(--earth);background:var(--surface)}
+.fmt-btn.active{border-color:var(--earth);background:var(--earth);color:#fff}
+.fmt-btn.active .fmt-dim{opacity:.7}
+
+/* ── Filter bar ───────────────────────────────────────────────────────────── */
+.filter-section{padding:.85rem 1.2rem;display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end}
+.filter-group{display:flex;flex-direction:column;gap:.3rem}
+.seg{display:flex;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:2px;gap:2px}
+.seg-btn{padding:5px 10px;border-radius:5px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-lt);cursor:pointer;transition:all .15s;white-space:nowrap}
+.seg-btn:hover{color:var(--earth)}
+.seg-btn.active{background:var(--earth);color:#fff;font-weight:500}
+
+/* ── Winner cards ─────────────────────────────────────────────────────────── */
+.winners{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.65rem;padding:0 1.2rem 1.2rem}
+.winner-card{border-radius:var(--r-sm);padding:.85rem 1rem;border:1.5px solid var(--border);background:var(--surface);transition:box-shadow .15s;cursor:default}
+.winner-card:hover{box-shadow:var(--sh-md)}
+.winner-card.best-deal{border-color:#c8a84a;background:var(--gold-lt)}
+.winner-card.smart-choice{border-color:#7aab8a;background:var(--green-lt)}
+.winner-card.studio-grade{border-color:var(--border-md);background:var(--white)}
+.winner-badge{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.09em;margin-bottom:.4rem;display:flex;align-items:center;gap:4px}
+.winner-card.best-deal .winner-badge{color:var(--gold)}
+.winner-card.smart-choice .winner-badge{color:var(--green)}
+.winner-card.studio-grade .winner-badge{color:var(--earth-lt)}
+.winner-brand{font-size:11px;color:var(--text-lt);margin-bottom:1px}
+.winner-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--text);font-weight:400;line-height:1.25;margin-bottom:.5rem}
+.winner-cost{font-size:1.5rem;font-family:'Cormorant Garamond',serif;color:var(--earth);font-weight:600;line-height:1}
+.winner-cost-label{font-size:10px;color:var(--text-lt);margin-top:2px}
+.winner-store{font-size:11px;color:var(--text-lt);margin-top:.4rem}
+.winner-score-bar{height:3px;background:var(--border);border-radius:2px;margin-top:.6rem}
+.winner-score-fill{height:3px;border-radius:2px;transition:width .5s ease}
+.winner-card.best-deal .winner-score-fill{background:var(--gold)}
+.winner-card.smart-choice .winner-score-fill{background:var(--green)}
+.winner-card.studio-grade .winner-score-fill{background:var(--earth-lt)}
+
+/* ── Results table ────────────────────────────────────────────────────────── */
+.table-wrap{overflow-x:auto;margin:0 0 0 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--surface);border-bottom:1.5px solid var(--border)}
+thead th{padding:.6rem .75rem;text-align:left;font-size:9.5px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--text-lt);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--earth)}
+thead th.r{text-align:right}
+thead th.sort-asc::after{content:' ↑'}
+thead th.sort-desc::after{content:' ↓'}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface)}
+tbody tr.row-highlight-gold{background:var(--gold-lt)}
+tbody tr.row-highlight-green{background:var(--green-lt)}
+td{padding:.6rem .75rem;color:var(--text-md);vertical-align:middle}
+td.r{text-align:right;font-variant-numeric:tabular-nums}
+td.brand-col{min-width:160px}
+.td-brand{font-weight:500;color:var(--text);font-size:13px}
+.td-product{font-size:11px;color:var(--text-lt);margin-top:1px;line-height:1.3}
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;white-space:nowrap}
+.badge-type-block{background:#ede8e0;color:var(--earth)}
+.badge-type-sheet{background:#e8ede8;color:#3a5e3a}
+.badge-type-roll{background:var(--blue-lt);color:var(--blue)}
+.badge-mat-cotton{background:#f0ede8;color:var(--earth);border:1px solid var(--border-md)}
+.badge-mat-cell{background:var(--surface);color:var(--text-lt);border:1px solid var(--border)}
+.badge-best{background:var(--gold-lt);color:var(--gold);border:1px solid #d4a84a}
+.badge-smart{background:var(--green-lt);color:var(--green);border:1px solid #7aab8a}
+.badge-studio{background:var(--surface);color:var(--earth-lt);border:1px solid var(--border-md)}
+
+/* ── Cost cell ────────────────────────────────────────────────────────────── */
+.cost-val{font-size:14px;font-weight:500;color:var(--text)}
+.cost-val.is-best{color:var(--gold);font-weight:600}
+.cost-val.is-smart{color:var(--green);font-weight:600}
+.cost-total{font-size:11px;color:var(--text-lt);margin-top:1px}
+
+/* ── Score mini bar ───────────────────────────────────────────────────────── */
+.score-wrap{display:flex;align-items:center;gap:5px}
+.score-bar-bg{width:48px;height:4px;background:var(--border);border-radius:2px;flex-shrink:0}
+.score-bar-fill{height:4px;border-radius:2px;background:var(--earth-lt)}
+.score-num{font-size:11px;color:var(--text-lt);width:22px;text-align:right}
+
+/* ── Store link ───────────────────────────────────────────────────────────── */
+.store-link{font-size:11.5px;color:var(--earth-lt);text-decoration:none;border-bottom:1px dotted var(--border-md);transition:color .15s;white-space:nowrap}
+.store-link:hover{color:var(--earth)}
+
+/* ── Add store form ───────────────────────────────────────────────────────── */
+.add-store-section{padding:1rem 1.2rem}
+.store-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.5rem;margin-top:.5rem}
+.fi{display:flex;flex-direction:column;gap:.25rem}
+.fi label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.09em;color:var(--text-lt)}
+.fi input,.fi select{padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:'DM Sans',sans-serif;font-size:12.5px;color:var(--text);outline:none;transition:border-color .15s}
+.fi input:focus,.fi select:focus{border-color:var(--earth-lt)}
+.form-actions{display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap}
+.btn{padding:.45rem 1rem;border-radius:var(--r-sm);border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;font-size:12.5px;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--earth);color:#fff;border-color:var(--earth)}
+.btn-primary:hover{background:var(--earth-dk)}
+.btn-ghost{background:transparent;color:var(--text-lt)}
+.btn-ghost:hover{border-color:var(--earth-lt);color:var(--earth)}
+.custom-stores-list{margin-top:.65rem;display:flex;flex-wrap:wrap;gap:.35rem}
+.custom-store-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:var(--surface);border:1px solid var(--border);font-size:12px;color:var(--text-md)}
+.custom-store-tag button{background:none;border:none;cursor:pointer;color:var(--text-lt);font-size:13px;line-height:1;padding:0;transition:color .15s}
+.custom-store-tag button:hover{color:var(--earth)}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text-lt);font-size:13px}
+
+/* ── Footnote ─────────────────────────────────────────────────────────────── */
+.footnote{font-size:11px;color:var(--text-lt);padding:.65rem 1.2rem 1rem;line-height:1.6;border-top:1px solid var(--border)}
+.footnote a{color:var(--earth-lt);text-decoration:none;border-bottom:1px dotted var(--border-md)}
+
+/* ── Utils ────────────────────────────────────────────────────────────────── */
+.hidden{display:none!important}
+.divider{height:1px;background:var(--border);margin:.2rem 0}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="app-head">
+    <h1>Paper Price Calculator</h1>
+    <div class="hline"></div>
+    <p class="sub">Real cost per A4 — blocks, loose sheets &amp; rolls compared</p>
+    <p class="brand">www.akvarellskiss.se</p>
+  </header>
+
+  <!-- TIP -->
+  <div class="tip-bar">
+    <span>💡</span>
+    <div>Select your target format below. The calculator normalises every product — blocks, loose sheets and rolls — to a true cost per sheet at that size, accounting for cutting waste.</div>
+  </div>
+
+  <!-- FORMAT SELECTOR -->
+  <div class="card">
+    <div class="format-section">
+      <span class="section-label">Calculate cost per format</span>
+      <div class="format-grid" id="formatGrid">
+        <!-- injected by JS -->
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="divider"></div>
+    <div class="filter-section">
+      <div class="filter-group">
+        <span class="section-label" style="margin-bottom:0">Region</span>
+        <div class="seg" id="regionSeg">
+          <button class="seg-btn active" data-v="all">All</button>
+          <button class="seg-btn" data-v="SE">Sweden</button>
+          <button class="seg-btn" data-v="UK">UK</button>
+          <button class="seg-btn" data-v="US">US</button>
+          <button class="seg-btn" data-v="EU">EU</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="section-label" style="margin-bottom:0">Format type</span>
+        <div class="seg" id="typeSeg">
+          <button class="seg-btn active" data-v="all">All</button>
+          <button class="seg-btn" data-v="block">Blocks</button>
+          <button class="seg-btn" data-v="sheet">Loose sheets</button>
+          <button class="seg-btn" data-v="roll">Rolls</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="section-label" style="margin-bottom:0">Material</span>
+        <div class="seg" id="matSeg">
+          <button class="seg-btn active" data-v="all">All</button>
+          <button class="seg-btn" data-v="cotton">Cotton</button>
+          <button class="seg-btn" data-v="cellulose">Cellulose</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINNER CARDS -->
+  <div class="card" id="winnersCard">
+    <div style="padding:.85rem 1.2rem .4rem">
+      <span class="section-label">Top picks for <span id="winnersFormatLabel">A4</span></span>
+    </div>
+    <div class="winners" id="winnersGrid">
+      <!-- injected by JS -->
+    </div>
+  </div>
+
+  <!-- RESULTS TABLE -->
+  <div class="card">
+    <div class="table-wrap">
+      <table id="paperTable">
+        <thead>
+          <tr>
+            <th data-sort="brand">Brand &amp; product</th>
+            <th data-sort="type">Type</th>
+            <th data-sort="gsm" class="r">g/m²</th>
+            <th data-sort="material">Material</th>
+            <th data-sort="costA4" class="r sort-asc">Cost per <span id="thFormat">A4</span></th>
+            <th data-sort="score" class="r">Smart score</th>
+            <th data-sort="totalSheets" class="r">Sheets</th>
+            <th>Store</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="8" class="empty-state">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="footnote">
+      Prices in SEK unless shown otherwise. Cost per sheet calculated using actual paper dimensions with a <strong>12–18% cutting-waste factor</strong> for rolls and loose sheets.
+      Prices are approximate — click store links to verify current prices.
+      Smart Score: price efficiency (40%) + material quality (30%) + format efficiency (20%) + availability (10%).
+    </div>
+  </div>
+
+  <!-- ADD CUSTOM STORE -->
+  <div class="card">
+    <div class="add-store-section">
+      <span class="section-label">Add your local store</span>
+      <p style="font-size:12px;color:var(--text-lt);margin-bottom:.6rem">Know a store with good prices? Add it and compare locally. Saved in your browser.</p>
+      <div class="store-form">
+        <div class="fi"><label>Store name</label><input id="cs-name" type="text" placeholder="e.g. Local Art Supply"></div>
+        <div class="fi"><label>City</label><input id="cs-city" type="text" placeholder="e.g. Gothenburg"></div>
+        <div class="fi"><label>Country</label><input id="cs-country" type="text" placeholder="e.g. SE"></div>
+        <div class="fi"><label>Currency</label>
+          <select id="cs-currency">
+            <option value="SEK">SEK</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+        <div class="fi"><label>Website (optional)</label><input id="cs-url" type="text" placeholder="https://..."></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="addStoreBtn">Add store</button>
+        <button class="btn btn-ghost" id="clearStoresBtn">Clear all custom stores</button>
+      </div>
+      <div class="custom-stores-list" id="customStoresList"></div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script id="paper-data">
+// ═══════════════════════════════════════════════════════════════════════════
+// PART 2 — DATA: Stores, Products, Offers, Currency rates
+// Paste this entire <script> block where the PART 2 comment is in Part 1
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── CURRENCY RATES (SEK base — update periodically) ─────────────────────
+const FX = { SEK:1, GBP:13.8, USD:10.6, EUR:11.4 };
+
+// ─── A4 reference area in cm² ─────────────────────────────────────────────
+const A4_AREA = 21 * 29.7; // 623.7 cm²
+
+// ─── TARGET FORMATS ───────────────────────────────────────────────────────
+const FORMATS = {
+  A6:  { w:10.5, h:14.8, label:'A6',  dim:'10×15 cm' },
+  A5:  { w:14.8, h:21.0, label:'A5',  dim:'15×21 cm' },
+  A4:  { w:21.0, h:29.7, label:'A4',  dim:'21×30 cm' },
+  A3:  { w:29.7, h:42.0, label:'A3',  dim:'30×42 cm' },
+  A2:  { w:42.0, h:59.4, label:'A2',  dim:'42×59 cm' },
+  FULL:{ w:56.0, h:76.0, label:'Full sheet', dim:'56×76 cm' },
+};
+
+// ─── STORES ───────────────────────────────────────────────────────────────
+// region: SE | UK | US | EU
+const STORES_DEFAULT = [
+  { id:'ibw',        name:'IB Wahlström',        city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://www.ibwahlstrom.se' },
+  { id:'kck',        name:'Konstnärernas (KCK)',  city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://konstnarernas.se' },
+  { id:'artistica',  name:'Artistica',            city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://artistica.nu' },
+  { id:'matton',     name:'Matton',               city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://www.mattonbutiken.se' },
+  { id:'panduro',    name:'Panduro',              city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://panduro.com/sv-se' },
+  { id:'kreatima',   name:'Kreatima',             city:'Stockholm', country:'SE', currency:'SEK', region:'SE', url:'https://kreatima.com' },
+  { id:'jacksons',   name:"Jackson's Art",        city:'London',    country:'UK', currency:'GBP', region:'UK', url:'https://www.jacksonsart.com' },
+  { id:'cass',       name:'Cass Art',             city:'London',    country:'UK', currency:'GBP', region:'UK', url:'https://www.cassart.co.uk' },
+  { id:'dickblick',  name:'Dick Blick',           city:'New York',  country:'US', currency:'USD', region:'US', url:'https://www.dickblick.com' },
+  { id:'jerrys',     name:"Jerry's Artarama",     city:'New York',  country:'US', currency:'USD', region:'US', url:'https://www.jerrysartarama.com' },
+  { id:'blicks',     name:'Blick Art Materials',  city:'Chicago',   country:'US', currency:'USD', region:'US', url:'https://www.dickblick.com' },
+  { id:'gerstaecker',name:'Gerstaecker',          city:'Hamburg',   country:'DE', currency:'EUR', region:'EU', url:'https://www.gerstaecker.de' },
+  { id:'modulor',    name:'Modulor',              city:'Berlin',    country:'DE', currency:'EUR', region:'EU', url:'https://www.modulor.de' },
+  { id:'schleiper',  name:'Schleiper',            city:'Brussels',  country:'BE', currency:'EUR', region:'EU', url:'https://www.schleiper.com' },
+];
+
+// ─── PRODUCTS ─────────────────────────────────────────────────────────────
+// material: cotton100 | cotton50 | cotton35 | cotton25 | cellulose | mixed
+// surface:  rough | cold | hot
+// type:     block | sheet | roll
+const PRODUCTS = [
+  // ARCHES (France) — 100% cotton, archival
+  { id:'arches-300-block-a4',   brand:'Arches',              name:'Block 300g A4 12 sheets Cold Press',          type:'block', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'arches-300-sheet-cold', brand:'Arches',              name:'Loose sheets 300g 56×76cm 10-pack Cold Press', type:'sheet', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'arches-300-sheet-rough',brand:'Arches',              name:'Loose sheets 300g 56×76cm 10-pack Rough',      type:'sheet', material:'cotton100', surface:'rough',gsm:300, archival:true  },
+  { id:'arches-640-sheet',      brand:'Arches',              name:'Loose sheets 640g 56×76cm 5-pack Cold Press',  type:'sheet', material:'cotton100', surface:'cold', gsm:640, archival:true  },
+  { id:'arches-300-roll',       brand:'Arches',              name:'Roll 300g 113×915cm Cold Press',               type:'roll',  material:'cotton100', surface:'cold', gsm:300, archival:true  },
+
+  // SAUNDERS WATERFORD (UK) — 100% cotton
+  { id:'sw-300-block-a4',       brand:'Saunders Waterford',  name:'Block 300g A4 20 sheets Cold Press',          type:'block', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'sw-300-block-a3',       brand:'Saunders Waterford',  name:'Block 300g A3 20 sheets Cold Press',          type:'block', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'sw-300-sheet',          brand:'Saunders Waterford',  name:'Loose sheets 300g 56×76cm 5-pack',            type:'sheet', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'sw-300-roll',           brand:'Saunders Waterford',  name:'Roll 300g 113×1000cm',                        type:'roll',  material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'sw-300-uk-roll',        brand:'Saunders Waterford',  name:'Roll 300g 140×1000cm',                        type:'roll',  material:'cotton100', surface:'cold', gsm:300, archival:true  },
+
+  // FABRIANO ARTISTICO — 100% cotton
+  { id:'fab-artistico-300-a4',  brand:'Fabriano Artistico',  name:'Block 300g A4 20 sheets Cold Press',          type:'block', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'fab-artistico-sheet',   brand:'Fabriano Artistico',  name:'Loose sheets 300g 56×76cm 10-pack',           type:'sheet', material:'cotton100', surface:'cold', gsm:300, archival:true  },
+  { id:'fab-artistico-roll',    brand:'Fabriano Artistico',  name:'Roll 300g 150×1000cm',                        type:'roll',  material:'cotton100', surface:'cold', gsm:300, archival:true  },
+
+  // FABRIANO WATERCOLOUR / 1264 — cellulose
+  { id:'fab-wc-200-a4',         brand:'Fabriano Watercolour',name:'Block 200g A4 30 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:200, archival:false },
+  { id:'fab-wc-300-50x70',      brand:'Fabriano Watercolour',name:'Loose sheets 300g 50×70cm 25-pack',           type:'sheet', material:'cellulose', surface:'cold', gsm:300, archival:false },
+  { id:'fab-torchon-sheet',     brand:'Fabriano Watercolour',name:'Torchon 270g 50×70cm 25-pack Rough',          type:'sheet', material:'cellulose', surface:'rough',gsm:270, archival:false },
+  { id:'fab-1264-300-a3',       brand:'Fabriano 1264',       name:'Block 300g A3 20 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+
+  // CANSON MONTVAL — cellulose
+  { id:'montval-300-block-a4',  brand:'Canson Montval',      name:'Block 300g A4 20 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+  { id:'montval-200-block-a4',  brand:'Canson Montval',      name:'Block 200g A4 20 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:200, archival:false },
+  { id:'montval-300-block-a3',  brand:'Canson Montval',      name:'Block 300g 24×32cm 100 sheets',               type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+  { id:'montval-300-roll',      brand:'Canson Montval',      name:'Roll 300g 113×960cm',                         type:'roll',  material:'cellulose', surface:'cold', gsm:300, archival:false },
+
+  // BOCKINGFORD — cellulose
+  { id:'bock-300-block-a4',     brand:'Bockingford',         name:'Block 300g A4 18 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+  { id:'bock-300-block-a3',     brand:'Bockingford',         name:'Block 300g A3 18 sheets Cold Press',          type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+
+  // HAHNEMÜHLE — cellulose
+  { id:'hahne-200-block-a4',    brand:'Hahnemühle',          name:'Block 200g A4 20 sheets',                     type:'block', material:'cellulose', surface:'cold', gsm:200, archival:false },
+  { id:'hahne-300-block-a4',    brand:'Hahnemühle Collection',name:'Block 300g A4 20 sheets',                    type:'block', material:'cellulose', surface:'cold', gsm:300, archival:false },
+  { id:'hahne-300-roll',        brand:'Hahnemühle Collection',name:'Roll 300g 106×1000cm',                       type:'roll',  material:'cellulose', surface:'cold', gsm:300, archival:false },
+
+  // WINSOR & NEWTON — cotton25
+  { id:'wn-300-sheet',          brand:'Winsor & Newton',     name:'Loose sheet 300g 56×76cm',                    type:'sheet', material:'cotton25',  surface:'cold', gsm:300, archival:true  },
+  { id:'wn-300-block-a4',       brand:'Winsor & Newton',     name:'Block 300g A4 20 sheets',                     type:'block', material:'cotton25',  surface:'cold', gsm:300, archival:true  },
+
+  // IBW35 — cotton35
+  { id:'ibw-300-a3-100',        brand:'IBW35',               name:'Loose sheets 300g A3 100-pack',               type:'sheet', material:'cotton35',  surface:'cold', gsm:300, archival:false },
+  { id:'ibw-300-a4-100',        brand:'IBW35',               name:'Loose sheets 300g A4 100-pack',               type:'sheet', material:'cotton35',  surface:'cold', gsm:300, archival:false },
+
+  // US BRANDS
+  { id:'strathmore-400-block',  brand:'Strathmore 400',      name:'Block 300g 9×12in 15 sheets',                 type:'block', material:'cotton25',  surface:'cold', gsm:300, archival:false },
+  { id:'stillman-300-block',    brand:'Stillman & Birn',     name:'Beta Block 270g A4 24 sheets',                type:'block', material:'cellulose', surface:'cold', gsm:270, archival:true  },
+];
+
+// ─── OFFERS ───────────────────────────────────────────────────────────────
+// dim_w, dim_h in cm | count = number of sheets (1 for rolls)
+// efficiency: cutting waste factor (1.0 = no waste, 0.82 = 18% waste for rolls)
+const OFFERS = [
+  // ── SE — IB Wahlström ──────────────────────────────────────────────────
+  { product:'montval-300-block-a4',  store:'ibw',       price:179,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'montval-200-block-a4',  store:'ibw',       price:129,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'bock-300-block-a4',     store:'ibw',       price:219,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:18,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'bock-300-block-a3',     store:'ibw',       price:269,   currency:'SEK', dim_w:29.7, dim_h:42.0,  count:18,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'sw-300-block-a4',       store:'ibw',       price:289,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'sw-300-block-a3',       store:'ibw',       price:389,   currency:'SEK', dim_w:29.7, dim_h:42.0,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'sw-300-sheet',          store:'ibw',       price:395,   currency:'SEK', dim_w:56,   dim_h:76,    count:5,   efficiency:0.88, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellpapper' },
+  { product:'fab-wc-200-a4',         store:'ibw',       price:149,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:30,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'fab-artistico-300-a4',  store:'ibw',       price:299,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+  { product:'ibw-300-a3-100',        store:'ibw',       price:549,   currency:'SEK', dim_w:29.7, dim_h:42.0,  count:100, efficiency:1.00, url:'https://www.ibwahlstrom.se/akvarellpapper-ibw-a3-300g-grov-100ark' },
+  { product:'ibw-300-a4-100',        store:'ibw',       price:389,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:100, efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellpapper' },
+  { product:'hahne-200-block-a4',    store:'ibw',       price:179,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.ibwahlstrom.se/papper-duk/papper/akvarellblock' },
+
+  // ── SE — Konstnärernas (KCK) ───────────────────────────────────────────
+  { product:'arches-300-block-a4',   store:'kck',       price:349,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:12,  efficiency:1.00, url:'https://konstnarernas.se/product.html/akvarellblock-arches-300g-12-ark' },
+  { product:'arches-300-sheet-cold', store:'kck',       price:699,   currency:'SEK', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://konstnarernas.se/product.html/arches-akvarellpapper-fin-grang' },
+  { product:'arches-300-sheet-rough',store:'kck',       price:699,   currency:'SEK', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'arches-640-sheet',      store:'kck',       price:799,   currency:'SEK', dim_w:56,   dim_h:76,    count:5,   efficiency:0.88, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'arches-300-roll',       store:'kck',       price:1850,  currency:'SEK', dim_w:113,  dim_h:915,   count:1,   efficiency:0.82, url:'https://konstnarernas.se/product.html/arches-300g-akvarellpapper-rulle' },
+  { product:'sw-300-roll',           store:'kck',       price:1750,  currency:'SEK', dim_w:113,  dim_h:1000,  count:1,   efficiency:0.82, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'hahne-300-block-a4',    store:'kck',       price:249,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'hahne-300-roll',        store:'kck',       price:1290,  currency:'SEK', dim_w:106,  dim_h:1000,  count:1,   efficiency:0.82, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'montval-300-roll',      store:'kck',       price:890,   currency:'SEK', dim_w:113,  dim_h:960,   count:1,   efficiency:0.82, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'fab-1264-300-a3',       store:'kck',       price:189,   currency:'SEK', dim_w:29.7, dim_h:42.0,  count:20,  efficiency:1.00, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+  { product:'fab-artistico-sheet',   store:'kck',       price:649,   currency:'SEK', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://konstnarernas.se/category.html/akvarellpapper' },
+
+  // ── SE — Artistica ─────────────────────────────────────────────────────
+  { product:'fab-artistico-sheet',   store:'artistica', price:595,   currency:'SEK', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://artistica.nu/papper-kartong-block/akvarellpapper' },
+  { product:'fab-artistico-roll',    store:'artistica', price:1950,  currency:'SEK', dim_w:150,  dim_h:1000,  count:1,   efficiency:0.82, url:'https://artistica.nu/papper-kartong-block/akvarellpapper' },
+  { product:'fab-torchon-sheet',     store:'artistica', price:485,   currency:'SEK', dim_w:50,   dim_h:70,    count:25,  efficiency:0.88, url:'https://artistica.nu/papper-kartong-block/akvarellpapper' },
+  { product:'fab-wc-300-50x70',      store:'artistica', price:320,   currency:'SEK', dim_w:50,   dim_h:70,    count:25,  efficiency:0.88, url:'https://artistica.nu/papper-kartong-block/akvarellpapper' },
+
+  // ── SE — Panduro ───────────────────────────────────────────────────────
+  { product:'arches-300-roll',       store:'panduro',   price:1890,  currency:'SEK', dim_w:113,  dim_h:915,   count:1,   efficiency:0.82, url:'https://panduro.com/sv-se/produkter/mala-rita' },
+  { product:'montval-300-block-a4',  store:'panduro',   price:189,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://panduro.com/sv-se/produkter/mala-rita' },
+
+  // ── SE — Matton ────────────────────────────────────────────────────────
+  { product:'wn-300-sheet',          store:'matton',    price:75,    currency:'SEK', dim_w:56,   dim_h:76,    count:1,   efficiency:0.88, url:'https://www.mattonbutiken.se/kategori/papper/akvarellpapper' },
+  { product:'wn-300-block-a4',       store:'matton',    price:259,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.mattonbutiken.se/kategori/papper/akvarellpapper' },
+  { product:'montval-300-block-a3',  store:'matton',    price:299,   currency:'SEK', dim_w:24,   dim_h:32,    count:100, efficiency:1.00, url:'https://www.mattonbutiken.se/kategori/papper/akvarellpapper' },
+
+  // ── SE — Kreatima ──────────────────────────────────────────────────────
+  { product:'hahne-300-block-a4',    store:'kreatima',  price:239,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://kreatima.com/akvarellpapper' },
+  { product:'bock-300-block-a4',     store:'kreatima',  price:209,   currency:'SEK', dim_w:21,   dim_h:29.7,  count:18,  efficiency:1.00, url:'https://kreatima.com/akvarellpapper' },
+
+  // ── UK — Jackson's Art ─────────────────────────────────────────────────
+  { product:'arches-300-block-a4',   store:'jacksons',  price:18.50, currency:'GBP', dim_w:21,   dim_h:29.7,  count:12,  efficiency:1.00, url:'https://www.jacksonsart.com/watercolour-paper' },
+  { product:'arches-300-sheet-cold', store:'jacksons',  price:42.00, currency:'GBP', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://www.jacksonsart.com/watercolour-paper' },
+  { product:'sw-300-uk-roll',        store:'jacksons',  price:89.00, currency:'GBP', dim_w:140,  dim_h:1000,  count:1,   efficiency:0.82, url:'https://www.jacksonsart.com/watercolour-paper' },
+  { product:'sw-300-block-a4',       store:'jacksons',  price:13.50, currency:'GBP', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.jacksonsart.com/watercolour-paper' },
+  { product:'fab-artistico-300-a4',  store:'jacksons',  price:16.50, currency:'GBP', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.jacksonsart.com/watercolour-paper' },
+
+  // ── UK — Cass Art ──────────────────────────────────────────────────────
+  { product:'sw-300-block-a4',       store:'cass',      price:14.99, currency:'GBP', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.cassart.co.uk/watercolour' },
+  { product:'bock-300-block-a4',     store:'cass',      price:8.99,  currency:'GBP', dim_w:21,   dim_h:29.7,  count:18,  efficiency:1.00, url:'https://www.cassart.co.uk/watercolour' },
+  { product:'arches-300-block-a4',   store:'cass',      price:19.99, currency:'GBP', dim_w:21,   dim_h:29.7,  count:12,  efficiency:1.00, url:'https://www.cassart.co.uk/watercolour' },
+
+  // ── US — Dick Blick ────────────────────────────────────────────────────
+  { product:'arches-300-block-a4',   store:'dickblick', price:24.99, currency:'USD', dim_w:21,   dim_h:29.7,  count:12,  efficiency:1.00, url:'https://www.dickblick.com/products/arches-watercolor-block' },
+  { product:'strathmore-400-block',  store:'dickblick', price:14.99, currency:'USD', dim_w:22.9, dim_h:30.5,  count:15,  efficiency:1.00, url:'https://www.dickblick.com/products/strathmore-watercolor-pads' },
+  { product:'fab-artistico-300-a4',  store:'dickblick', price:22.99, currency:'USD', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.dickblick.com/products/fabriano-artistico-watercolor-block' },
+
+  // ── US — Jerry's Artarama ──────────────────────────────────────────────
+  { product:'stillman-300-block',    store:'jerrys',    price:19.99, currency:'USD', dim_w:21,   dim_h:29.7,  count:24,  efficiency:1.00, url:'https://www.jerrysartarama.com' },
+  { product:'arches-300-sheet-cold', store:'jerrys',    price:38.99, currency:'USD', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://www.jerrysartarama.com' },
+
+  // ── EU — Gerstaecker ───────────────────────────────────────────────────
+  { product:'arches-300-sheet-cold', store:'gerstaecker',price:39.99,currency:'EUR', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://www.gerstaecker.de/akvarellpapper' },
+  { product:'hahne-300-block-a4',    store:'gerstaecker',price:18.99,currency:'EUR', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.gerstaecker.de' },
+  { product:'fab-artistico-300-a4',  store:'gerstaecker',price:21.50,currency:'EUR', dim_w:21,   dim_h:29.7,  count:20,  efficiency:1.00, url:'https://www.gerstaecker.de' },
+
+  // ── EU — Modulor ───────────────────────────────────────────────────────
+  { product:'fab-artistico-sheet',   store:'modulor',   price:44.99, currency:'EUR', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://www.modulor.de/aquarellpapier' },
+  { product:'arches-300-sheet-cold', store:'modulor',   price:42.00, currency:'EUR', dim_w:56,   dim_h:76,    count:10,  efficiency:0.88, url:'https://www.modulor.de/aquarellpapier' },
+];
+</script>
+
+<script id="paper-engine">
+// ═══════════════════════════════════════════════════════════════════════════
+// PART 3 — ENGINE + UI
+// Paste this entire <script> block where the PART 3 comment is in Part 1
+// ═══════════════════════════════════════════════════════════════════════════
+'use strict';
+
+const STATE = {
+  format:   'A4',
+  region:   'all',
+  type:     'all',
+  material: 'all',
+  sortCol:  'costA4',
+  sortAsc:  true,
+  customStores: [],
+};
+
+const g = id => document.getElementById(id);
+
+function toSEK(price, currency) {
+  return price * (FX[currency] || 1);
+}
+
+function sheetsPerPaper(offer, fmt) {
+  const f = FORMATS[fmt];
+  if (!f) return 1;
+  const cols = Math.floor(offer.dim_w / f.w);
+  const rows = Math.floor(offer.dim_h / f.h);
+  return Math.max(1, cols * rows);
+}
+
+function totalUsableSheets(offer, fmt) {
+  const spp = sheetsPerPaper(offer, fmt);
+  return offer.count * spp * offer.efficiency;
+}
+
+function costPerSheet(offer, fmt) {
+  const usable = totalUsableSheets(offer, fmt);
+  if (usable <= 0) return Infinity;
+  return toSEK(offer.price, offer.currency) / usable;
+}
+
+function materialScore(material) {
+  const scores = { cotton100:1.0, cotton50:0.85, cotton35:0.72, cotton25:0.60, mixed:0.55, cellulose:0.35 };
+  return scores[material] || 0.35;
+}
+
+function formatEfficiency(offer, fmt) {
+  const f    = FORMATS[fmt];
+  const spp  = sheetsPerPaper(offer, fmt);
+  const paperArea = offer.dim_w * offer.dim_h;
+  const usedArea  = spp * f.w * f.h;
+  return Math.min(1, usedArea / paperArea);
+}
+
+function availabilityScore(store) {
+  const allStores = [...STORES_DEFAULT, ...STATE.customStores];
+  const s = allStores.find(x => x.id === store);
+  if (!s) return 0.5;
+  if (STATE.region === 'all') return 0.8;
+  return s.region === STATE.region ? 1.0 : 0.4;
+}
+
+function smartScore(offer, product, fmt, allCosts) {
+  const cost    = costPerSheet(offer, fmt);
+  const minCost = Math.min(...allCosts.filter(c => c > 0 && isFinite(c)));
+  const maxCost = Math.max(...allCosts.filter(c => c > 0 && isFinite(c)));
+  const priceEff = maxCost === minCost ? 1
+    : 1 - (cost - minCost) / (maxCost - minCost);
+  const matQ   = materialScore(product.material);
+  const fmtEff = formatEfficiency(offer, fmt);
+  const avail  = availabilityScore(offer.store);
+  const archBonus = product.archival ? 0.04 : 0;
+  const raw = (priceEff * 0.40) + (matQ * 0.30) + (fmtEff * 0.20) + (avail * 0.10) + archBonus;
+  return Math.round(Math.min(1, raw) * 100);
+}
+
+function buildRows() {
+  const allStores = [...STORES_DEFAULT, ...STATE.customStores];
+  let rows = OFFERS.map(offer => {
+    const product = PRODUCTS.find(p => p.id === offer.product);
+    const store   = allStores.find(s => s.id === offer.store);
+    if (!product || !store) return null;
+    const f = FORMATS[STATE.format];
+    if (offer.dim_w < f.w || offer.dim_h < f.h) return null;
+    if (STATE.region !== 'all' && store.region !== STATE.region) return null;
+    if (STATE.type !== 'all' && product.type !== STATE.type) return null;
+    if (STATE.material === 'cotton' && !product.material.startsWith('cotton')) return null;
+    if (STATE.material === 'cellulose' && product.material !== 'cellulose') return null;
+    return { offer, product, store };
+  }).filter(Boolean);
+
+  if (rows.length === 0) return [];
+
+  const allCosts = rows.map(r => costPerSheet(r.offer, STATE.format));
+  rows = rows.map((r, i) => ({
+    ...r,
+    costSEK:     costPerSheet(r.offer, STATE.format),
+    totalSheets: Math.round(totalUsableSheets(r.offer, STATE.format)),
+    score:       smartScore(r.offer, r.product, STATE.format, allCosts),
+  }));
+
+  rows.sort((a, b) => {
+    let va, vb;
+    if (STATE.sortCol === 'costA4')       { va = a.costSEK; vb = b.costSEK; }
+    else if (STATE.sortCol === 'score')   { va = a.score;   vb = b.score;   }
+    else if (STATE.sortCol === 'gsm')     { va = a.product.gsm; vb = b.product.gsm; }
+    else if (STATE.sortCol === 'brand')   { va = a.product.brand; vb = b.product.brand; }
+    else if (STATE.sortCol === 'type')    { va = a.product.type; vb = b.product.type; }
+    else if (STATE.sortCol === 'material'){ va = a.product.material; vb = b.product.material; }
+    else if (STATE.sortCol === 'totalSheets'){ va = a.totalSheets; vb = b.totalSheets; }
+    else { va = a.costSEK; vb = b.costSEK; }
+    if (typeof va === 'string') return STATE.sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    return STATE.sortAsc ? va - vb : vb - va;
+  });
+
+  return rows;
+}
+
+function assignWinners(rows) {
+  if (!rows.length) return {};
+  const byCost  = [...rows].sort((a,b) => a.costSEK - b.costSEK);
+  const byScore = [...rows].sort((a,b) => b.score - a.score);
+  const studioRows = rows.filter(r => r.product.material === 'cotton100' && r.product.archival);
+  const byStudio   = [...studioRows].sort((a,b) => b.score - a.score);
+  const winners = {};
+  const bestDealKey  = byCost[0]  ? `${byCost[0].offer.product}|${byCost[0].offer.store}`  : null;
+  const smartKey     = byScore[0] ? `${byScore[0].offer.product}|${byScore[0].offer.store}` : null;
+  const studioKey    = byStudio[0]? `${byStudio[0].offer.product}|${byStudio[0].offer.store}`:null;
+  if (bestDealKey) winners[bestDealKey] = (winners[bestDealKey]||[]).concat('best');
+  if (smartKey && smartKey !== bestDealKey) winners[smartKey] = (winners[smartKey]||[]).concat('smart');
+  if (studioKey && studioKey !== bestDealKey && studioKey !== smartKey) winners[studioKey] = (winners[studioKey]||[]).concat('studio');
+  return { winners, bestDeal: byCost[0], smartChoice: byScore[0], studioGrade: byStudio[0] };
+}
+
+function renderWinners(rows) {
+  g('winnersFormatLabel').textContent = STATE.format === 'FULL' ? 'Full sheet (56×76cm)' : STATE.format;
+  if (!rows.length) {
+    g('winnersGrid').innerHTML = '<p style="padding:.5rem 0;font-size:13px;color:var(--text-lt)">No products match the current filters.</p>';
+    return;
+  }
+  const { bestDeal, smartChoice, studioGrade } = assignWinners(rows);
+  const makeCard = (row, cls, icon, label) => {
+    if (!row) return '';
+    const costStr = formatCost(row.costSEK);
+    return `
+    <div class="winner-card ${cls}">
+      <div class="winner-badge">${icon} ${label}</div>
+      <div class="winner-brand">${row.product.brand}</div>
+      <div class="winner-name">${row.product.name}</div>
+      <div class="winner-cost">${costStr}</div>
+      <div class="winner-cost-label">per ${STATE.format === 'FULL' ? 'full sheet' : STATE.format} · ${row.store.name}</div>
+      <div class="winner-store">${matLabel(row.product.material)} · ${row.product.gsm}g/m²${row.product.archival?' · archival':''}</div>
+      <div class="winner-score-bar"><div class="winner-score-fill" style="width:${row.score}%"></div></div>
+    </div>`;
+  };
+  g('winnersGrid').innerHTML =
+    makeCard(bestDeal,   'best-deal',    '🥇', 'Best Deal') +
+    makeCard(smartChoice,'smart-choice', '⭐', 'Smart Choice') +
+    makeCard(studioGrade,'studio-grade', '🎨', 'Studio Grade');
+}
+
+function formatCost(sekCost) {
+  return sekCost.toFixed(1) + ' kr';
+}
+
+function matLabel(mat) {
+  const labels = { cotton100:'100% cotton', cotton50:'50% cotton', cotton35:'35% cotton',
+                   cotton25:'25% cotton', cellulose:'Cellulose', mixed:'Mixed' };
+  return labels[mat] || mat;
+}
+
+function typeBadge(type) {
+  const map    = { block:'badge-type-block', sheet:'badge-type-sheet', roll:'badge-type-roll' };
+  const labels = { block:'Block', sheet:'Loose sheets', roll:'Roll' };
+  return `<span class="badge ${map[type]||''}">${labels[type]||type}</span>`;
+}
+
+function matBadge(mat) {
+  const isCotton = mat.startsWith('cotton');
+  return `<span class="badge ${isCotton?'badge-mat-cotton':'badge-mat-cell'}">${matLabel(mat)}</span>`;
+}
+
+function renderTable(rows) {
+  const tbody = g('tableBody');
+  g('thFormat').textContent = STATE.format === 'FULL' ? 'Full sheet' : STATE.format;
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No products match — try widening your filters or select a smaller format.</td></tr>`;
+    return;
+  }
+  const { winners } = assignWinners(rows);
+  tbody.innerHTML = rows.map(row => {
+    const key    = `${row.offer.product}|${row.offer.store}`;
+    const wlist  = winners[key] || [];
+    const rowCls = wlist.includes('best') ? 'row-highlight-gold' : wlist.includes('smart') ? 'row-highlight-green' : '';
+    const costStr = formatCost(row.costSEK);
+    const costCls = wlist.includes('best') ? 'is-best' : wlist.includes('smart') ? 'is-smart' : '';
+    const winBadges = wlist.map(w =>
+      w==='best'  ? '<span class="badge badge-best">🥇 Best Deal</span>' :
+      w==='smart' ? '<span class="badge badge-smart">⭐ Smart Choice</span>' :
+      w==='studio'? '<span class="badge badge-studio">🎨 Studio Grade</span>' : ''
+    ).join(' ');
+    const origPrice = row.offer.currency !== 'SEK'
+      ? `${row.offer.price} ${row.offer.currency}` : `${row.offer.price} kr`;
+    const scoreBar = `<div class="score-wrap">
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:${row.score}%"></div></div>
+      <span class="score-num">${row.score}</span>
+    </div>`;
+    return `<tr class="${rowCls}">
+      <td class="brand-col">
+        <div class="td-brand">${row.product.brand}</div>
+        <div class="td-product">${row.product.name}</div>
+        ${winBadges ? `<div style="margin-top:4px">${winBadges}</div>` : ''}
+      </td>
+      <td>${typeBadge(row.product.type)}</td>
+      <td class="r">${row.product.gsm}</td>
+      <td>${matBadge(row.product.material)}</td>
+      <td class="r">
+        <div class="cost-val ${costCls}">${costStr}</div>
+        <div class="cost-total">${origPrice} · ${row.totalSheets} sheets</div>
+      </td>
+      <td class="r">${scoreBar}</td>
+      <td class="r">${row.totalSheets}</td>
+      <td><a class="store-link" href="${row.offer.url}" target="_blank" rel="noopener">${row.store.name} ↗</a>
+        <div style="font-size:10px;color:var(--text-lt);margin-top:2px">${row.store.city}</div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function render() {
+  const rows = buildRows();
+  renderWinners(rows);
+  renderTable(rows);
+  updateSortHeaders();
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll('#paperTable thead th[data-sort]').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+    if (th.dataset.sort === STATE.sortCol) th.classList.add(STATE.sortAsc ? 'sort-asc' : 'sort-desc');
+  });
+}
+
+function renderFormatGrid() {
+  const grid = g('formatGrid');
+  grid.innerHTML = Object.entries(FORMATS).map(([key, f]) => `
+    <button class="fmt-btn ${key===STATE.format?'active':''}" data-fmt="${key}">
+      <span class="fmt-name">${f.label}</span>
+      <span class="fmt-dim">${f.dim}</span>
+    </button>`).join('');
+  grid.querySelectorAll('.fmt-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      STATE.format = this.dataset.fmt;
+      grid.querySelectorAll('.fmt-btn').forEach(b => b.classList.toggle('active', b===this));
+      render();
+    });
+  });
+}
+
+function initSeg(segId, stateKey) {
+  g(segId).querySelectorAll('.seg-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      STATE[stateKey] = this.dataset.v;
+      g(segId).querySelectorAll('.seg-btn').forEach(b => b.classList.toggle('active', b===this));
+      render();
+    });
+  });
+}
+
+function initTableSort() {
+  document.querySelectorAll('#paperTable thead th[data-sort]').forEach(th => {
+    th.addEventListener('click', function() {
+      const col = this.dataset.sort;
+      if (STATE.sortCol === col) STATE.sortAsc = !STATE.sortAsc;
+      else { STATE.sortCol = col; STATE.sortAsc = col === 'costA4'; }
+      render();
+    });
+  });
+}
+
+function loadCustomStores() {
+  try { STATE.customStores = JSON.parse(localStorage.getItem('wpc_custom_stores') || '[]'); }
+  catch(e) { STATE.customStores = []; }
+}
+
+function saveCustomStores() {
+  try { localStorage.setItem('wpc_custom_stores', JSON.stringify(STATE.customStores)); } catch(e){}
+}
+
+function renderCustomStoresList() {
+  const el = g('customStoresList');
+  if (!STATE.customStores.length) { el.innerHTML = ''; return; }
+  el.innerHTML = STATE.customStores.map((s,i) => `
+    <span class="custom-store-tag">
+      ${s.name} <span style="opacity:.5">(${s.city}, ${s.currency})</span>
+      <button onclick="removeCustomStore(${i})" title="Remove">×</button>
+    </span>`).join('');
+}
+
+window.removeCustomStore = function(i) {
+  STATE.customStores.splice(i,1);
+  saveCustomStores();
+  renderCustomStoresList();
+  render();
+};
+
+function initAddStore() {
+  g('addStoreBtn').addEventListener('click', () => {
+    const name     = g('cs-name').value.trim();
+    const city     = g('cs-city').value.trim();
+    const country  = g('cs-country').value.trim().toUpperCase();
+    const currency = g('cs-currency').value;
+    const url      = g('cs-url').value.trim();
+    if (!name || !city) { alert('Please enter at least a store name and city.'); return; }
+    const id = 'custom_' + Date.now();
+    STATE.customStores.push({ id, name, city, country:country||'??', currency, region:country||'??', url:url||'#', custom:true });
+    saveCustomStores();
+    renderCustomStoresList();
+    g('cs-name').value=''; g('cs-city').value=''; g('cs-country').value=''; g('cs-url').value='';
+    render();
+  });
+  g('clearStoresBtn').addEventListener('click', () => {
+    if (!STATE.customStores.length) return;
+    if (!confirm('Remove all custom stores?')) return;
+    STATE.customStores = [];
+    saveCustomStores();
+    renderCustomStoresList();
+    render();
+  });
+}
+
+(function init() {
+  loadCustomStores();
+  renderFormatGrid();
+  initSeg('regionSeg',  'region');
+  initSeg('typeSeg',    'type');
+  initSeg('matSeg',     'material');
+  initTableSort();
+  initAddStore();
+  renderCustomStoresList();
+  render();
+})();
+</script>
+
+</body>
+</html>
